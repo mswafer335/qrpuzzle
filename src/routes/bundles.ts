@@ -59,6 +59,9 @@ router.get("/download/:id", async (req: Request, res: Response) => {
   if (!bundle) {
     return res.status(404).json({ err: "Не найдено" });
   }
+  bundle.download_date = new Date();
+  bundle.download_num += 1;
+  await bundle.save();
   res.download(
     path.resolve(__dirname + "/../public/" + bundle.archive_path),
     bundle.archive_path.split("/").pop()
