@@ -288,7 +288,7 @@ router.get("/find/claimed", async (req: Request, res: Response) => {
 router.get("/find/validated", async (req: Request, res: Response) => {
   try {
     let codes = await Prize.find({ validated: true }).populate("player");
-    res.json(codes);
+    res.json(codes);  
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
@@ -339,7 +339,7 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
         const CodeFinal = code1 + code2 + code3 + code4;
         const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
         const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
-        const QRinput = "https://site-url.com/" + QR_CODE;
+        const QRinput = "http://185.231.153.99:4666/validation/" + QR_CODE;
 
         await QRCode.toDataURL(QRinput, {
           errorCorrectionLevel: "H",
