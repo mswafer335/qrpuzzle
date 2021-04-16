@@ -202,12 +202,17 @@ router.put("/win", async (req: Request, res: Response) => {
     // const qr = await QR.findOne({ code: req.params.qr });
     const prize = await Prize.findOne({ code: req.body.code });
     if (!prize) {
-      return res.status(400).json({ err: "Неверный код валидации" });
+      return res
+        .status(400)
+        .json({ err: "Неверный код валидации", status: false });
     }
     if (prize.validated === true) {
       return res
         .status(404)
-        .json({ err: "Указанный валидационный код уже использован" });
+        .json({
+          err: "Указанный валидационный код уже использован",
+          status: false,
+        });
     }
     // prize.qr = qr._id;
     prize.validated = true;
@@ -222,6 +227,7 @@ router.put("/win", async (req: Request, res: Response) => {
     return res.json({
       msg: `Вы выиграли ${prize.value} рублей!`,
       value: prize.value,
+      status: true,
     });
   } catch (error) {
     console.error(error);
