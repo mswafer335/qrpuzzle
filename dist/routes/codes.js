@@ -46,10 +46,12 @@ const qrcode_1 = __importDefault(require("qrcode"));
 const fs_1 = __importDefault(require("fs"));
 const archiver_1 = __importDefault(require("archiver"));
 const path_1 = __importDefault(require("path"));
+// import sharp from "sharp";
 const sans_1 = require("../public/fonts/sans");
 const Prize_1 = __importDefault(require("../models/Prize"));
 const QR_urls_1 = __importDefault(require("../models/QR-urls"));
 const Bundle_1 = __importDefault(require("../models/Bundle"));
+const Player_1 = __importDefault(require("../models/Player"));
 function makeid(length) {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -59,148 +61,149 @@ function makeid(length) {
     }
     return result;
 }
-// generator
-router.post("/old", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        let date = new Date();
-        date =
-            date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
-        let QRurl;
-        const QRNumber = req.body.count;
-        const price = req.body.price;
-        const archName = `${date}-${price.toString()}-${QRNumber}-${Math.random()
-            .toString(36)
-            .substr(2, 6)
-            .toLowerCase()}.zip`;
-        const filenameArray = [];
-        const output = fs_1.default.createWriteStream(__dirname + "/../public/archive/" + archName);
-        const archive = archiver_1.default("zip", {
-            zlib: { level: 6 },
-        });
-        archive.pipe(output);
-        archive.on("error", (err) => {
-            if (err)
-                throw err;
-        });
-        const QR_ARRAY = [];
-        const PRIZE_ARRAY = [];
-        const func = (count) => __awaiter(void 0, void 0, void 0, function* () {
-            let ind = 1;
-            while (ind <= count) {
-                const code1 = Math.random().toString(36).substr(3, 4).toLowerCase();
-                const code2 = Math.random().toString(36).substr(3, 4).toLowerCase();
-                const code3 = Math.random().toString(36).substr(3, 4).toLowerCase();
-                const code4 = Date.now().toString(36).substr(4).toLowerCase();
-                const CodeFinal = code1 + code2 + code3 + code4;
-                const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
-                const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
-                const QRinput = "https://site-url.com/" + QR_CODE;
-                const filename = ind +
-                    "-" +
-                    Math.random().toString(36).substr(2, 6).toLowerCase() +
-                    ".pdf";
-                const file = __dirname + `/../public/pdf/${filename}`;
-                const doc = new jspdf_1.jsPDF({
-                    orientation: "landscape",
-                    unit: "mm",
-                    format: [450, 320],
-                });
-                yield qrcode_1.default.toDataURL(QRinput, {
-                    errorCorrectionLevel: "H",
-                    type: "image/jpeg",
-                    quality: 1,
-                    margin: 0.5,
-                    color: {
-                        dark: "#000000",
-                        light: "#ffdc00",
-                    },
-                })
-                    .then((url) => {
-                    QRurl = url;
-                })
-                    .catch((err) => {
-                    console.error(err);
-                });
-                // QRurl = QRurl.split(";base64,").pop();
-                // const buffer = Buffer.from(QRurl, "base64");
-                // const QRJpg = await sharp(buffer)
-                //   .toColourspace("cmyk")
-                //   .jpeg({
-                //     quality: 100,
-                //     chromaSubsampling: "4:4:4",
-                //   })
-                //   .toBuffer();
-                doc.addFileToVFS("sans.ttf", sans_1.font);
-                doc.addFont("sans.ttf", "sans", "normal");
-                doc.setFont("sans");
-                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
-                doc.rect(5, 5, 310, 310, "FD");
-                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
-                doc.rect(320, 5, 125, 310, "FD");
-                doc.setLineWidth(2);
-                doc.rect(10, 10, 300, 300, "FD");
-                doc.setFontSize(23);
-                doc.text("Текст инструкции:", 335, 200);
-                doc.text("Тут будет инструкция", 335, 220);
-                doc.text("Валидационный код:", 335, 290);
-                doc.text(CodePrint, 335, 300);
-                doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
-                doc.save(file);
-                archive.file(file, { name: filename });
-                filenameArray.push(filename);
-                ind += 1;
-                const PrizeObj = new Prize_1.default({
-                    code: CodeFinal,
-                    value: price,
-                    validated: false,
-                    date: Date.now(),
-                    qr: undefined,
-                });
-                const QRObj = new QR_urls_1.default({ code: QR_CODE, url: QRinput });
-                QR_ARRAY.push(QRObj);
-                PRIZE_ARRAY.push(PrizeObj);
-            }
-        });
-        yield func(QRNumber);
-        res.on("finish", () => __awaiter(void 0, void 0, void 0, function* () {
-            // fs.unlink(
-            //   path.resolve(__dirname + `/../public/archive/` + archName),
-            //   (err) => {
-            //     if (err) throw err;
-            //   }
-            // );
-        }));
-        output.on("close", () => __awaiter(void 0, void 0, void 0, function* () {
-            const NewBundle = new Bundle_1.default({
-                amount: QRNumber,
-                date: new Date(),
-                value: price,
-                archive_path: `archive/${archName}`,
-                prizes: PRIZE_ARRAY,
-            });
-            yield NewBundle.save();
-            yield Prize_1.default.insertMany(PRIZE_ARRAY);
-            yield QR_urls_1.default.insertMany(QR_ARRAY);
-            res.json(NewBundle
-            // path.resolve(__dirname + `/../public/archive/` + archName),
-            // archName
-            );
-        }));
-        yield archive.finalize();
-        const directory = __dirname + "/../public/pdf";
-        for (const file of filenameArray) {
-            fs_1.default.unlink(path_1.default.join(directory, file), (err) => {
-                if (err)
-                    throw err;
-            });
-        }
-        console.log(path_1.default.resolve(__dirname + `/../public/archive/` + archName));
-    }
-    catch (error) {
-        console.error(error);
-        return res.status(500).json({ err: "server error" });
-    }
-}));
+// // generator
+// router.post("/old", async (req: Request, res: Response) => {
+//   try {
+//     let date: any = new Date();
+//     date =
+//       date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
+//     let QRurl: string;
+//     const QRNumber: number = req.body.count;
+//     const price: number = req.body.price;
+//     const archName = `${date}-${price.toString()}-${QRNumber}-${Math.random()
+//       .toString(36)
+//       .substr(2, 6)
+//       .toLowerCase()}.zip`;
+//     const filenameArray: string[] = [];
+//     const output = fs.createWriteStream(
+//       __dirname + "/../public/archive/" + archName
+//     );
+//     const archive = archiver("zip", {
+//       zlib: { level: 6 },
+//     });
+//     archive.pipe(output);
+//     archive.on("error", (err) => {
+//       if (err) throw err;
+//     });
+//     const QR_ARRAY: IQR[] = [];
+//     const PRIZE_ARRAY: IPrize[] = [];
+//     const func = async (count: number) => {
+//       let ind = 1;
+//       while (ind <= count) {
+//         const code1 = Math.random().toString(36).substr(3, 4).toLowerCase();
+//         const code2 = Math.random().toString(36).substr(3, 4).toLowerCase();
+//         const code3 = Math.random().toString(36).substr(3, 4).toLowerCase();
+//         const code4 = Date.now().toString(36).substr(4).toLowerCase();
+//         const CodeFinal = code1 + code2 + code3 + code4;
+//         const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
+//         const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
+//         const QRinput = "https://site-url.com/" + QR_CODE;
+//         const filename =
+//           ind +
+//           "-" +
+//           Math.random().toString(36).substr(2, 6).toLowerCase() +
+//           ".pdf";
+//         const file = __dirname + `/../public/pdf/${filename}`;
+//         const doc = new jsPDF({
+//           orientation: "landscape",
+//           unit: "mm",
+//           format: [450, 320],
+//         });
+//         await QRCode.toDataURL(QRinput, {
+//           errorCorrectionLevel: "H",
+//           type: "image/jpeg",
+//           quality: 1,
+//           margin: 0.5,
+//           color: {
+//             dark: "#000000",
+//             light: "#ffdc00",
+//           },
+//         })
+//           .then((url) => {
+//             QRurl = url;
+//           })
+//           .catch((err) => {
+//             console.error(err);
+//           });
+//         // QRurl = QRurl.split(";base64,").pop();
+//         // const buffer = Buffer.from(QRurl, "base64");
+//         // const QRJpg = await sharp(buffer)
+//         //   .toColourspace("cmyk")
+//         //   .jpeg({
+//         //     quality: 100,
+//         //     chromaSubsampling: "4:4:4",
+//         //   })
+//         //   .toBuffer();
+//         doc.addFileToVFS("sans.ttf", font);
+//         doc.addFont("sans.ttf", "sans", "normal");
+//         doc.setFont("sans");
+//         doc.setFillColor(0.02, 0.1, 1.0, 0.0);
+//         doc.rect(5, 5, 310, 310, "FD");
+//         doc.setFillColor(0.02, 0.1, 1.0, 0.0);
+//         doc.rect(320, 5, 125, 310, "FD");
+//         doc.setLineWidth(2);
+//         doc.rect(10, 10, 300, 300, "FD");
+//         doc.setFontSize(23);
+//         doc.text("Текст инструкции:", 335, 200);
+//         doc.text("Тут будет инструкция", 335, 220);
+//         doc.text("Валидационный код:", 335, 290);
+//         doc.text(CodePrint, 335, 300);
+//         doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
+//         doc.save(file);
+//         archive.file(file, { name: filename });
+//         filenameArray.push(filename);
+//         ind += 1;
+//         const PrizeObj: IPrize = new Prize({
+//           code: CodeFinal,
+//           value: price,
+//           validated: false,
+//           date: Date.now(),
+//           qr: undefined,
+//         });
+//         const QRObj: IQR = new QR({ code: QR_CODE, url: QRinput });
+//         QR_ARRAY.push(QRObj);
+//         PRIZE_ARRAY.push(PrizeObj);
+//       }
+//     };
+//     await func(QRNumber);
+//     res.on("finish", async () => {
+//       // fs.unlink(
+//       //   path.resolve(__dirname + `/../public/archive/` + archName),
+//       //   (err) => {
+//       //     if (err) throw err;
+//       //   }
+//       // );
+//     });
+//     output.on("close", async () => {
+//       const NewBundle = new Bundle({
+//         amount: QRNumber,
+//         date: new Date(),
+//         value: price,
+//         archive_path: `archive/${archName}`,
+//         prizes: PRIZE_ARRAY,
+//       });
+//       await NewBundle.save();
+//       await Prize.insertMany(PRIZE_ARRAY);
+//       await QR.insertMany(QR_ARRAY);
+//       res.json(
+//         NewBundle
+//         // path.resolve(__dirname + `/../public/archive/` + archName),
+//         // archName
+//       );
+//     });
+//     await archive.finalize();
+//     const directory = __dirname + "/../public/pdf";
+//     for (const file of filenameArray) {
+//       fs.unlink(path.join(directory, file), (err) => {
+//         if (err) throw err;
+//       });
+//     }
+//     console.log(path.resolve(__dirname + `/../public/archive/` + archName));
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ err: "server error" });
+//   }
+// });
 // check QR
 router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -225,9 +228,9 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
 // get prize
 router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const qr = yield QR_urls_1.default.findOne({ code: req.params.qr });
+        // const qr = await QR.findOne({ code: req.params.qr });
         const prize = yield Prize_1.default.findOne({ code: req.body.code });
-        if (!qr || !prize) {
+        if (!prize) {
             return res.status(400).json({ err: "Неверный код валидации" });
         }
         if (prize.validated === true) {
@@ -235,12 +238,12 @@ router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function*
                 .status(404)
                 .json({ err: "Указанный валидационный код уже использован" });
         }
-        prize.qr = qr._id;
+        // prize.qr = qr._id;
         prize.validated = true;
-        qr.validated = true;
-        qr.prize = prize._id;
+        // qr.validated = true;
+        // qr.prize = prize._id;
         yield prize.save();
-        yield qr.save();
+        // await qr.save();
         yield Bundle_1.default.findOneAndUpdate({ prizes: prize._id }, { $inc: { amount_validated: 1 } });
         return res.json({
             msg: `Вы выиграли ${prize.value} рублей!`,
@@ -252,7 +255,48 @@ router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function*
         return res.status(500).json({ err: "server error" });
     }
 }));
-exports.default = router;
+// claim prize
+router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let user = yield Player_1.default.findOne({ phone: req.body.phone });
+        const code = yield Prize_1.default.findOne({ code: req.body.code });
+        if (!code) {
+            return res.status(400).json({ err: "Код невалиден" });
+        }
+        if (!user) {
+            user = new Player_1.default({
+                phone: req.body.phone,
+                email: req.body.email,
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                fullname: req.body.lastname + " " + req.body.firstname,
+                prizes: [],
+                prize_sum: 0,
+            });
+        }
+        user.prizes.push(code);
+        user.prize_sum += code.value;
+        yield user.save();
+        code.player = user;
+        yield code.save();
+        res.json({ msg: "хуе мое приз привязан к юзеру" });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
+// get all claimed prizes
+router.get("/find/claimed", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const codes = yield Prize_1.default.find({ player: { $ne: undefined } }).populate("player");
+        res.json(codes);
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
 // generator
 router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -299,7 +343,7 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 yield qrcode_1.default.toDataURL(QRinput, {
                     errorCorrectionLevel: "H",
                     type: "image/jpeg",
-                    quality: 1,
+                    // quality: 1,
                     margin: 0.5,
                     color: {
                         dark: "#000000",
@@ -322,8 +366,8 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 doc.rect(5, 5, 310, 310, "FD");
                 doc.setFillColor(0.02, 0.1, 1.0, 0.0);
                 doc.rect(320, 5, 125, 310, "FD");
-                doc.setLineWidth(2);
-                doc.rect(10, 10, 300, 300, "FD");
+                // doc.setLineWidth(2);
+                // doc.rect(10, 10, 300, 300, "FD");
                 doc.setFontSize(23);
                 doc.text("Текст инструкции:", 335, 200);
                 doc.text("Тут будет инструкция", 335, 220);
@@ -380,4 +424,5 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
         return res.status(500).json({ err: "server error" });
     }
 }));
+exports.default = router;
 //# sourceMappingURL=codes.js.map

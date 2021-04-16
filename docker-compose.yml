@@ -6,6 +6,12 @@ services:
     build: .
     ports:
       - '1370:1370'
+    volumes:
+      - archive:/app/dist/public/archive
+      - pdf:/app/dist/public/pdf
+volumes: 
+  archive:
+  pdf:
 #networks:
  # default:
   #  external:

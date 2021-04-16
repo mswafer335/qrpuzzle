@@ -14,11 +14,12 @@ import QRCode from "qrcode";
 import fs from "fs";
 import archiver from "archiver";
 import path from "path";
-import sharp from "sharp";
+// import sharp from "sharp";
 import { font } from "../public/fonts/sans";
 import Prize, { IPrize } from "../models/Prize";
 import QR, { IQR } from "../models/QR-urls";
 import Bundle from "../models/Bundle";
+import Player from "../models/Player";
 
 function makeid(length: number) {
   let result = "";
@@ -198,9 +199,9 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
 // get prize
 router.put("/win/:qr", async (req: Request, res: Response) => {
   try {
-    const qr = await QR.findOne({ code: req.params.qr });
+    // const qr = await QR.findOne({ code: req.params.qr });
     const prize = await Prize.findOne({ code: req.body.code });
-    if (!qr || !prize) {
+    if (!prize) {
       return res.status(400).json({ err: "Неверный код валидации" });
     }
     if (prize.validated === true) {
@@ -208,12 +209,12 @@ router.put("/win/:qr", async (req: Request, res: Response) => {
         .status(404)
         .json({ err: "Указанный валидационный код уже использован" });
     }
-    prize.qr = qr._id;
+    // prize.qr = qr._id;
     prize.validated = true;
-    qr.validated = true;
-    qr.prize = prize._id;
+    // qr.validated = true;
+    // qr.prize = prize._id;
     await prize.save();
-    await qr.save();
+    // await qr.save();
     await Bundle.findOneAndUpdate(
       { prizes: prize._id },
       { $inc: { amount_validated: 1 } }
@@ -227,7 +228,50 @@ router.put("/win/:qr", async (req: Request, res: Response) => {
     return res.status(500).json({ err: "server error" });
   }
 });
-export default router;
+
+// claim prize
+router.put("/claim", async (req: Request, res: Response) => {
+  try {
+    let user = await Player.findOne({ phone: req.body.phone });
+    const code = await Prize.findOne({ code: req.body.code });
+    if (!code) {
+      return res.status(400).json({ err: "Код невалиден" });
+    }
+    if (!user) {
+      user = new Player({
+        phone: req.body.phone,
+        email: req.body.email,
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        fullname: req.body.lastname + " " + req.body.firstname,
+        prizes: [],
+        prize_sum: 0,
+      });
+    }
+    user.prizes.push(code);
+    user.prize_sum += code.value;
+    await user.save();
+    code.player = user;
+    await code.save();
+    res.json({ msg: "хуе мое приз привязан к юзеру" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
+
+// get all claimed prizes
+router.get("/find/claimed", async (req: Request, res: Response) => {
+  try {
+    const codes = await Prize.find({ player: { $ne: undefined } }).populate(
+      "player"
+    );
+    res.json(codes);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
 
 // generator
 router.post("/generatecodes", async (req: Request, res: Response) => {
@@ -301,8 +345,8 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
         doc.rect(5, 5, 310, 310, "FD");
         doc.setFillColor(0.02, 0.1, 1.0, 0.0);
         doc.rect(320, 5, 125, 310, "FD");
-        doc.setLineWidth(2);
-        doc.rect(10, 10, 300, 300, "FD");
+        // doc.setLineWidth(2);
+        // doc.rect(10, 10, 300, 300, "FD");
         doc.setFontSize(23);
         doc.text("Текст инструкции:", 335, 200);
         doc.text("Тут будет инструкция", 335, 220);
@@ -358,3 +402,4 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
     return res.status(500).json({ err: "server error" });
   }
 });
+export default router;
