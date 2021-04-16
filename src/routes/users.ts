@@ -24,9 +24,9 @@ router.get("/find/all", async (req: Request, res: Response) => {
 // get single user
 router.get("/find/:phone", async (req: Request, res: Response) => {
   try {
-    const user = await Player.findOne({ phone: req.params.phone }).populate(
-      "prizes"
-    );
+    const user = await Player.findOne({
+      phone: { $regex: req.params.phone, $options: "i" },
+    }).populate("prizes");
     if (!user) {
       return res
         .status(404)
