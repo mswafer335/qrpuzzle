@@ -40,7 +40,7 @@ router.get("/find/:phone", async (req: Request, res: Response) => {
 });
 
 // get all users with >4k winnings
-router.get("/find/ndfl", async (req: Request, res: Response) => {
+router.get("/find/all/ndfl", async (req: Request, res: Response) => {
   try {
     const users = await Player.find({ prize_sum: { $gt: 4000 } });
     res.json(users);
