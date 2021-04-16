@@ -9,6 +9,7 @@ export interface IPlayer extends Document {
   phone: string;
   prizes: IPrize["_id"];
   prize_sum: number;
+  sum_ndfl: number;
 }
 
 const PlayerSchema = new Schema({
@@ -35,6 +36,7 @@ const PlayerSchema = new Schema({
     },
   ],
   prize_sum: { type: Number, default: 0 },
+  sum_ndfl: { type: Number },
 });
 
 export default model<IPlayer>("player", PlayerSchema);

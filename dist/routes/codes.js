@@ -226,17 +226,20 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 }));
 // get prize
-router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put("/win", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // const qr = await QR.findOne({ code: req.params.qr });
         const prize = yield Prize_1.default.findOne({ code: req.body.code });
         if (!prize) {
-            return res.status(400).json({ err: "Неверный код валидации" });
+            return res
+                .status(400)
+                .json({ err: "Неверный код валидации", status: false });
         }
         if (prize.validated === true) {
-            return res
-                .status(404)
-                .json({ err: "Указанный валидационный код уже использован" });
+            return res.status(404).json({
+                err: "Указанный валидационный код уже использован",
+                status: false,
+            });
         }
         // prize.qr = qr._id;
         prize.validated = true;
@@ -248,6 +251,7 @@ router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function*
         return res.json({
             msg: `Вы выиграли ${prize.value} рублей!`,
             value: prize.value,
+            status: true,
         });
     }
     catch (error) {
@@ -276,6 +280,14 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         user.prizes.push(code);
         user.prize_sum += code.value;
+        if (user.prize_sum < 4000) {
+            user.sum_ndfl = user.prize_sum;
+        }
+        else {
+            const num = user.prize_sum - 4000;
+            const tax = num * 0.35;
+            user.sum_ndfl = user.prize_sum - tax;
+        }
         yield user.save();
         code.player = user;
         yield code.save();

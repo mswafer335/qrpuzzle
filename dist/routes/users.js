@@ -35,60 +35,46 @@ const express_1 = require("express");
 const router = express_1.Router();
 const dotenv = __importStar(require("dotenv"));
 dotenv.config({ path: __dirname + "/.env" });
-const path_1 = __importDefault(require("path"));
-const Bundle_1 = __importDefault(require("../models/Bundle"));
-// get all bundles
+const Player_1 = __importDefault(require("../models/Player"));
+// get all users
 router.get("/find/all", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const bundles = yield Bundle_1.default.find();
-        return res.json(bundles);
+        const users = yield Player_1.default.find().populate("prizes");
+        res.json(users);
     }
     catch (error) {
         console.error(error);
         return res.status(500).json({ err: "server error" });
     }
 }));
-// get single bundle
-router.get("/find/id/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// get single user
+router.get("/find/:phone", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const bundle = yield Bundle_1.default.findOne({ _id: req.params.id }).populate("prizes");
-        if (!bundle) {
-            return res.status(404).json({ err: "Не найдено" });
+        const user = yield Player_1.default.findOne({
+            phone: { $regex: req.params.phone, $options: "i" },
+        }).populate("prizes");
+        if (!user) {
+            return res
+                .status(404)
+                .json({ err: "Пользователь с указанным номером телефона не найден" });
         }
-        return res.json(bundle);
+        res.json(user);
     }
     catch (error) {
         console.error(error);
         return res.status(500).json({ err: "server error" });
     }
 }));
-// change print status
-router.put("/change/print/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// get all users with >4k winnings
+router.get("/find/all/ndfl", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const bundle = yield Bundle_1.default.findOne({ _id: req.params.id });
-        if (!bundle) {
-            return res.status(404).json({ err: "Не найдено" });
-        }
-        bundle.printed = !bundle.printed;
-        bundle.print_date = new Date();
-        yield bundle.save();
-        res.redirect(303, `/bundles/find/id/${req.params.id}`);
+        const users = yield Player_1.default.find({ prize_sum: { $gt: 4000 } });
+        res.json(users);
     }
     catch (error) {
         console.error(error);
         return res.status(500).json({ err: "server error" });
     }
-}));
-// download archive
-router.get("/download/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const bundle = yield Bundle_1.default.findOne({ _id: req.params.id });
-    if (!bundle) {
-        return res.status(404).json({ err: "Не найдено" });
-    }
-    bundle.download_date = new Date();
-    bundle.download_num += 1;
-    yield bundle.save();
-    res.download(path_1.default.resolve(__dirname + "/../public/" + bundle.archive_path), bundle.archive_path.split("/").pop());
 }));
 exports.default = router;
-//# sourceMappingURL=bundles.js.map
+//# sourceMappingURL=users.js.map

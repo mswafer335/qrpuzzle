@@ -25,6 +25,8 @@ const BundleSchema = new mongoose_1.Schema({
     archive_path: {
         type: String,
     },
+    download_date: { type: Date },
+    download_num: { type: Number, default: 0 },
     prizes: [
         {
             type: mongoose_1.Schema.Types.ObjectId,

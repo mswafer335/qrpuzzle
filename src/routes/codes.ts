@@ -207,12 +207,10 @@ router.put("/win", async (req: Request, res: Response) => {
         .json({ err: "Неверный код валидации", status: false });
     }
     if (prize.validated === true) {
-      return res
-        .status(404)
-        .json({
-          err: "Указанный валидационный код уже использован",
-          status: false,
-        });
+      return res.status(404).json({
+        err: "Указанный валидационный код уже использован",
+        status: false,
+      });
     }
     // prize.qr = qr._id;
     prize.validated = true;
@@ -240,7 +238,7 @@ router.put("/claim", async (req: Request, res: Response) => {
   try {
     let user = await Player.findOne({ phone: req.body.phone });
     const code = await Prize.findOne({ code: req.body.code });
-    if (!code) {
+    if (!code || code.player) {
       return res.status(400).json({ err: "Код невалиден" });
     }
     if (!user) {
@@ -256,6 +254,13 @@ router.put("/claim", async (req: Request, res: Response) => {
     }
     user.prizes.push(code);
     user.prize_sum += code.value;
+    if (user.prize_sum < 4000) {
+      user.sum_ndfl = user.prize_sum;
+    } else {
+      const num = user.prize_sum - 4000;
+      const tax = num * 0.35;
+      user.sum_ndfl = user.prize_sum - tax;
+    }
     await user.save();
     code.player = user;
     await code.save();
@@ -272,6 +277,17 @@ router.get("/find/claimed", async (req: Request, res: Response) => {
     const codes = await Prize.find({ player: { $ne: undefined } }).populate(
       "player"
     );
+    res.json(codes);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
+
+//get all validated codes
+router.get("/find/validated", async (req: Request, res: Response) => {
+  try {
+    let codes = await Prize.find({ validated: true }).populate("player");
     res.json(codes);
   } catch (error) {
     console.error(error);
