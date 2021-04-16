@@ -197,7 +197,7 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
 });
 
 // get prize
-router.put("/win/:qr", async (req: Request, res: Response) => {
+router.put("/win", async (req: Request, res: Response) => {
   try {
     // const qr = await QR.findOne({ code: req.params.qr });
     const prize = await Prize.findOne({ code: req.body.code });
