@@ -1,0 +1,12 @@
+version: '3'
+services:
+  app:
+    container_name: qrpuzzle
+    restart: always
+    build: .
+    ports:
+      - '1370:1370'
+#networks:
+ # default:
+  #  external:
+   #   name: buroplatform_default
