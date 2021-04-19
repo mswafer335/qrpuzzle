@@ -51,7 +51,7 @@ router.post("/register", async (req: Request, res: Response) => {
 
 // authentification
 router.post("/auth", async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { password } = req.body;
 
   try {
     console.log(req.body);
