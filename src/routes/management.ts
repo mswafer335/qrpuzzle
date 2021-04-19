@@ -2,7 +2,7 @@ import { Response, Request, Router } from "express";
 const router = Router();
 import * as dotenv from "dotenv";
 import * as bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 dotenv.config({ path: __dirname + "/.env" });
 
 import fs from "fs";
@@ -43,50 +43,49 @@ router.post("/register", async (req: Request, res: Response) => {
         });
       }
     );
-} catch (error) {
+  } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
   }
 });
 
 // authentification
-router.post("/auth", async (req:Request, res:Response) => {
-    const { email, password } = req.body;
+router.post("/auth", async (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
-    try {
-      const user = await Admin.findOne({ email });
-      if (!user) {
-        return res.status(400).json({
-          errors: [{ err: "Пользователь с указанным email не найден" }],
-        });
-      }
-
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ errors: [{ err: "Неверный пароль" }] });
-      }
-
-
-      // jsonwebtoken return
-      const payload = {
-        admin: {
-          id: user.id,
-        },
-      };
-
-      jwt.sign(
-        payload,
-        process.env.jwtSecret,
-        { expiresIn: 360000000 },
-        (err, token) => {
-          if (err) throw err;
-          res.json({ token });
-        }
-      );
-    } catch (err) {
-      console.error(err.message);
-      res.status(500).json({ err: "server error" });
+  try {
+    const user = await Admin.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(400).json({
+        errors: [{ err: "Пользователь с указанным email не найден" }],
+      });
     }
-  });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ errors: [{ err: "Неверный пароль" }] });
+    }
+
+    // jsonwebtoken return
+    const payload = {
+      admin: {
+        id: user.id,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.jwtSecret,
+      { expiresIn: 360000000 },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ err: "server error" });
+  }
+});
 
 export default router;

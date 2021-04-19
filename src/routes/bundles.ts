@@ -69,4 +69,21 @@ router.get("/download/:id", auth, async (req: Request, res: Response) => {
   );
 });
 
+//delete bundle
+router.delete("/delete/:id", auth, async (req: Request, res: Response) => {
+  try {
+    let bundle = await Bundle.findOne({ _id: req.params.id });
+    fs.unlinkSync(__dirname + "/public/" + bundle.archive_path);
+    if (!bundle.printed) {
+      await Prize.deleteMany({ _id: { $in: bundle.prizes } });
+      await QR.deleteMany({ _id: { $in: bundle.qrs } });
+    }
+    await bundle.remove();
+    res.redirect(303, "/bundles/find/all");
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
+
 export default router;

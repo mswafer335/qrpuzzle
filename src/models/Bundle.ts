@@ -1,5 +1,6 @@
 import { model, Schema, Model, Document } from "mongoose";
 import { IPrize } from "./Prize";
+import { IQR } from "./QR-urls";
 
 export interface IBundle extends Document {
   amount: number;
@@ -10,6 +11,7 @@ export interface IBundle extends Document {
   printed: boolean;
   amount_validated: number;
   prizes: IPrize["_id"];
+  qrs: IQR["_id"];
   archive_path: string;
   print_date: Date;
 }
@@ -47,6 +49,13 @@ const BundleSchema: Schema = new Schema({
       default: [],
     },
   ],
+  qrs: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "qr",
+      default: [],
+    }
+  ]
 });
 
 export default model<IBundle>("bundle", BundleSchema);

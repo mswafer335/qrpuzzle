@@ -269,6 +269,7 @@ router.post("/generatecodes", auth, async (req: Request, res: Response) => {
         value: price,
         archive_path: `archive/${archName}`,
         prizes: PRIZE_ARRAY,
+        qrs: QR_ARRAY,
       });
       await NewBundle.save();
       await Prize.insertMany(PRIZE_ARRAY);
