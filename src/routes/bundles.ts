@@ -8,9 +8,10 @@ import path from "path";
 import Prize, { IPrize } from "../models/Prize";
 import QR, { IQR } from "../models/QR-urls";
 import Bundle from "../models/Bundle";
+import auth from "../middleware/auth";
 
 // get all bundles
-router.get("/find/all", async (req: Request, res: Response) => {
+router.get("/find/all", auth, async (req: Request, res: Response) => {
   try {
     const bundles = await Bundle.find();
     return res.json(bundles);
@@ -21,7 +22,7 @@ router.get("/find/all", async (req: Request, res: Response) => {
 });
 
 // get single bundle
-router.get("/find/id/:id", async (req: Request, res: Response) => {
+router.get("/find/id/:id", auth, async (req: Request, res: Response) => {
   try {
     const bundle = await Bundle.findOne({ _id: req.params.id }).populate(
       "prizes"
@@ -37,7 +38,7 @@ router.get("/find/id/:id", async (req: Request, res: Response) => {
 });
 
 // change print status
-router.put("/change/print/:id", async (req: Request, res: Response) => {
+router.put("/change/print/:id", auth, async (req: Request, res: Response) => {
   try {
     const bundle = await Bundle.findOne({ _id: req.params.id });
     if (!bundle) {
@@ -54,7 +55,7 @@ router.put("/change/print/:id", async (req: Request, res: Response) => {
 });
 
 // download archive
-router.get("/download/:id", async (req: Request, res: Response) => {
+router.get("/download/:id", auth, async (req: Request, res: Response) => {
   const bundle = await Bundle.findOne({ _id: req.params.id });
   if (!bundle) {
     return res.status(404).json({ err: "Не найдено" });

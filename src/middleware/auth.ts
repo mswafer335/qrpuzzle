@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 import { Response, Request, NextFunction } from "express";
 
-module.exports = (req:Request, res:Response, next:NextFunction)=> {
+export = (req:Request, res:Response, next:NextFunction)=> {
   // get token from header
   const token = req.header("auth-token");
 

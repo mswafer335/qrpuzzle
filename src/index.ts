@@ -4,6 +4,7 @@ import { connectDB } from "./middleware/db";
 import code_route from "./routes/codes";
 import bundle_route from "./routes/bundles";
 import user_route from "./routes/users";
+import admin_route from "./routes/management";
 import * as dotenv from "dotenv";
 dotenv.config();
 const app: Application = express();
@@ -19,6 +20,7 @@ app.get("/", (req: Request, res: Response) => res.send("no hack plz"));
 app.use("/codes", code_route);
 app.use("/bundles", bundle_route);
 app.use("/users", user_route);
+app.use("/admin", admin_route);
 
 const PORT = process.env.PORT || 1370;
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));

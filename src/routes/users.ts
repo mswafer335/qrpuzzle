@@ -9,9 +9,10 @@ import Prize, { IPrize } from "../models/Prize";
 import QR, { IQR } from "../models/QR-urls";
 import Bundle from "../models/Bundle";
 import Player from "../models/Player";
+import auth from "../middleware/auth";
 
 // get all users
-router.get("/find/all", async (req: Request, res: Response) => {
+router.get("/find/all", auth, async (req: Request, res: Response) => {
   try {
     const users = await Player.find().populate("prizes");
     res.json(users);
@@ -22,7 +23,7 @@ router.get("/find/all", async (req: Request, res: Response) => {
 });
 
 // get single user
-router.get("/find/:phone", async (req: Request, res: Response) => {
+router.get("/find/:phone", auth, async (req: Request, res: Response) => {
   try {
     const user = await Player.findOne({
       phone: { $regex: req.params.phone, $options: "i" },
@@ -40,7 +41,7 @@ router.get("/find/:phone", async (req: Request, res: Response) => {
 });
 
 // get all users with >4k winnings
-router.get("/find/all/ndfl", async (req: Request, res: Response) => {
+router.get("/find/all/ndfl", auth, async (req: Request, res: Response) => {
   try {
     const users = await Player.find({ prize_sum: { $gt: 4000 } });
     res.json(users);

@@ -50,7 +50,7 @@ router.post("/register", async (req: Request, res: Response) => {
 });
 
 // authentification
-router.post("/", async (req:Request, res:Response) => {
+router.post("/auth", async (req:Request, res:Response) => {
     const { email, password } = req.body;
 
     try {
