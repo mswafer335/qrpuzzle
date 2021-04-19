@@ -264,7 +264,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         let user = yield Player_1.default.findOne({ phone: req.body.phone });
         const code = yield Prize_1.default.findOne({ code: req.body.code });
-        if (!code) {
+        if (!code || code.player) {
             return res.status(400).json({ err: "Код невалиден" });
         }
         if (!user) {
@@ -302,6 +302,17 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
 router.get("/find/claimed", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const codes = yield Prize_1.default.find({ player: { $ne: undefined } }).populate("player");
+        res.json(codes);
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
+// get all validated codes
+router.get("/find/validated", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const codes = yield Prize_1.default.find({ validated: true }).populate("player");
         res.json(codes);
     }
     catch (error) {
@@ -351,7 +362,7 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 const CodeFinal = code1 + code2 + code3 + code4;
                 const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
                 const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
-                const QRinput = "https://site-url.com/" + QR_CODE;
+                const QRinput = "http://185.231.153.99:4666/validation/" + QR_CODE;
                 yield qrcode_1.default.toDataURL(QRinput, {
                     errorCorrectionLevel: "H",
                     type: "image/jpeg",

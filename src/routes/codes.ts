@@ -284,11 +284,22 @@ router.get("/find/claimed", async (req: Request, res: Response) => {
   }
 });
 
-//get all validated codes
+// get all validated codes
 router.get("/find/validated", async (req: Request, res: Response) => {
   try {
-    let codes = await Prize.find({ validated: true }).populate("player");
-    res.json(codes);  
+    const codes = await Prize.find({ validated: true }).populate("player");
+    res.json(codes);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
+
+//get all codes
+router.get("/find/all", async (req: Request, res: Response) => {
+  try {
+    let codes = await Prize.find({});
+    res.json(codes);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
