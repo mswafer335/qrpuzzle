@@ -54,7 +54,6 @@ router.post("/auth", async (req: Request, res: Response) => {
   const { password } = req.body;
 
   try {
-    console.log(req.body);
     const user = await Admin.findOne({ email: req.body.email });
     if (!user) {
       return res.status(400).json({
