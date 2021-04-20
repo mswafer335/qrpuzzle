@@ -55,7 +55,7 @@ router.put("/change/print/:id", auth, async (req: Request, res: Response) => {
 });
 
 // download archive
-router.get("/download/:id", auth, async (req: Request, res: Response) => {
+router.get("/download/:id", async (req: Request, res: Response) => {
   const bundle = await Bundle.findOne({ _id: req.params.id });
   if (!bundle) {
     return res.status(404).json({ err: "Не найдено" });
