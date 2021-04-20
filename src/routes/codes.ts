@@ -58,7 +58,7 @@ router.put("/win", async (req: Request, res: Response) => {
   try {
     console.log(req.body)
     // const qr = await QR.findOne({ code: req.params.qr });
-    const prize = await Prize.findOne({ code: req.body.code });
+    const prize = await Prize.findOne({ code: req.body.code.toLowerCase() });
     if (!prize) {
       return res
         .status(400)
@@ -97,7 +97,7 @@ router.put("/claim", async (req: Request, res: Response) => {
   try {
 
     let user = await Player.findOne({ phone: req.body.phone });
-    const code = await Prize.findOne({ code: req.body.code });
+    const code = await Prize.findOne({ code: req.body.code.toLowerCase() });
     if (!code || code.player) {
       return res.status(400).json({ err: "Код невалиден" });
     }
