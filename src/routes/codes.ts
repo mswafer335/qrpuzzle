@@ -56,6 +56,7 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
 // get prize
 router.put("/win", async (req: Request, res: Response) => {
   try {
+    console.log(req.body)
     // const qr = await QR.findOne({ code: req.params.qr });
     const prize = await Prize.findOne({ code: req.body.code });
     if (!prize) {
@@ -94,6 +95,7 @@ router.put("/win", async (req: Request, res: Response) => {
 // claim prize
 router.put("/claim", async (req: Request, res: Response) => {
   try {
+
     let user = await Player.findOne({ phone: req.body.phone });
     const code = await Prize.findOne({ code: req.body.code });
     if (!code || code.player) {
@@ -122,7 +124,7 @@ router.put("/claim", async (req: Request, res: Response) => {
     await user.save();
     code.player = user;
     await code.save();
-    res.json({ msg: "хуе мое приз привязан к юзеру" });
+    res.json({ msg: "пользователь привязан", PS:"сео соси" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
