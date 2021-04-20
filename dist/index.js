@@ -28,6 +28,7 @@ const db_1 = require("./middleware/db");
 const codes_1 = __importDefault(require("./routes/codes"));
 const bundles_1 = __importDefault(require("./routes/bundles"));
 const users_1 = __importDefault(require("./routes/users"));
+const management_1 = __importDefault(require("./routes/management"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
 const app = express_1.default();
@@ -40,6 +41,7 @@ app.get("/", (req, res) => res.send("no hack plz"));
 app.use("/codes", codes_1.default);
 app.use("/bundles", bundles_1.default);
 app.use("/users", users_1.default);
+app.use("/admin", management_1.default);
 const PORT = process.env.PORT || 1370;
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
 //# sourceMappingURL=index.js.map

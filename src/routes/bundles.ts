@@ -69,10 +69,10 @@ router.get("/download/:id", auth, async (req: Request, res: Response) => {
   );
 });
 
-//delete bundle
+// delete bundle
 router.delete("/delete/:id", auth, async (req: Request, res: Response) => {
   try {
-    let bundle = await Bundle.findOne({ _id: req.params.id });
+    const bundle = await Bundle.findOne({ _id: req.params.id });
     fs.unlinkSync(__dirname + "/public/" + bundle.archive_path);
     if (!bundle.printed) {
       await Prize.deleteMany({ _id: { $in: bundle.prizes } });

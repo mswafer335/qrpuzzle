@@ -152,11 +152,11 @@ router.get("/find/validated", auth, async (req: Request, res: Response) => {
   }
 });
 
-//get all codes
+// get all codes
 router.get("/find/all", auth, async (req: Request, res: Response) => {
   try {
-    console.log(req.body)
-    let codes = await Prize.find({}).populate("player");
+    console.log(req.user)
+    const codes = await Prize.find({}).populate("player");
     res.json(codes);
   } catch (error) {
     console.error(error);

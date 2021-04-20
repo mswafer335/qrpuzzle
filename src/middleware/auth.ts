@@ -12,9 +12,8 @@ export = (req:Request, res:Response, next:NextFunction)=> {
 
   // verifying token
   try {
-    const decoded = jwt.verify(token, process.env.jwtSecret);
-
-    req.body.decoded_user_id = decoded;
+    const decoded:any = jwt.verify(token, process.env.jwtSecret);
+    req.user = decoded.admin.id;
     next();
   } catch (err) {
     res.status(401).json({ msg: "Неверный токен авторизации" });

@@ -35,10 +35,14 @@ const express_1 = require("express");
 const router = express_1.Router();
 const dotenv = __importStar(require("dotenv"));
 dotenv.config({ path: __dirname + "/.env" });
+const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const Prize_1 = __importDefault(require("../models/Prize"));
+const QR_urls_1 = __importDefault(require("../models/QR-urls"));
 const Bundle_1 = __importDefault(require("../models/Bundle"));
+const auth_1 = __importDefault(require("../middleware/auth"));
 // get all bundles
-router.get("/find/all", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const bundles = yield Bundle_1.default.find();
         return res.json(bundles);
@@ -49,7 +53,7 @@ router.get("/find/all", (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 }));
 // get single bundle
-router.get("/find/id/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/find/id/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const bundle = yield Bundle_1.default.findOne({ _id: req.params.id }).populate("prizes");
         if (!bundle) {
@@ -63,7 +67,7 @@ router.get("/find/id/:id", (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 }));
 // change print status
-router.put("/change/print/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put("/change/print/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const bundle = yield Bundle_1.default.findOne({ _id: req.params.id });
         if (!bundle) {
@@ -80,7 +84,7 @@ router.put("/change/print/:id", (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 }));
 // download archive
-router.get("/download/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/download/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const bundle = yield Bundle_1.default.findOne({ _id: req.params.id });
     if (!bundle) {
         return res.status(404).json({ err: "Не найдено" });
@@ -89,6 +93,23 @@ router.get("/download/:id", (req, res) => __awaiter(void 0, void 0, void 0, func
     bundle.download_num += 1;
     yield bundle.save();
     res.download(path_1.default.resolve(__dirname + "/../public/" + bundle.archive_path), bundle.archive_path.split("/").pop());
+}));
+// delete bundle
+router.delete("/delete/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const bundle = yield Bundle_1.default.findOne({ _id: req.params.id });
+        fs_1.default.unlinkSync(__dirname + "/public/" + bundle.archive_path);
+        if (!bundle.printed) {
+            yield Prize_1.default.deleteMany({ _id: { $in: bundle.prizes } });
+            yield QR_urls_1.default.deleteMany({ _id: { $in: bundle.qrs } });
+        }
+        yield bundle.remove();
+        res.redirect(303, "/bundles/find/all");
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
 }));
 exports.default = router;
 //# sourceMappingURL=bundles.js.map

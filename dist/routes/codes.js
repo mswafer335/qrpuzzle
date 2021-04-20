@@ -37,6 +37,7 @@ const router = express_1.Router();
 const node_qiwi_api_1 = require("node-qiwi-api");
 const dotenv = __importStar(require("dotenv"));
 dotenv.config({ path: __dirname + "/.env" });
+const auth_1 = __importDefault(require("../middleware/auth"));
 const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
 // import axios from "axios";
@@ -61,149 +62,6 @@ function makeid(length) {
     }
     return result;
 }
-// // generator
-// router.post("/old", async (req: Request, res: Response) => {
-//   try {
-//     let date: any = new Date();
-//     date =
-//       date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
-//     let QRurl: string;
-//     const QRNumber: number = req.body.count;
-//     const price: number = req.body.price;
-//     const archName = `${date}-${price.toString()}-${QRNumber}-${Math.random()
-//       .toString(36)
-//       .substr(2, 6)
-//       .toLowerCase()}.zip`;
-//     const filenameArray: string[] = [];
-//     const output = fs.createWriteStream(
-//       __dirname + "/../public/archive/" + archName
-//     );
-//     const archive = archiver("zip", {
-//       zlib: { level: 6 },
-//     });
-//     archive.pipe(output);
-//     archive.on("error", (err) => {
-//       if (err) throw err;
-//     });
-//     const QR_ARRAY: IQR[] = [];
-//     const PRIZE_ARRAY: IPrize[] = [];
-//     const func = async (count: number) => {
-//       let ind = 1;
-//       while (ind <= count) {
-//         const code1 = Math.random().toString(36).substr(3, 4).toLowerCase();
-//         const code2 = Math.random().toString(36).substr(3, 4).toLowerCase();
-//         const code3 = Math.random().toString(36).substr(3, 4).toLowerCase();
-//         const code4 = Date.now().toString(36).substr(4).toLowerCase();
-//         const CodeFinal = code1 + code2 + code3 + code4;
-//         const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
-//         const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
-//         const QRinput = "https://site-url.com/" + QR_CODE;
-//         const filename =
-//           ind +
-//           "-" +
-//           Math.random().toString(36).substr(2, 6).toLowerCase() +
-//           ".pdf";
-//         const file = __dirname + `/../public/pdf/${filename}`;
-//         const doc = new jsPDF({
-//           orientation: "landscape",
-//           unit: "mm",
-//           format: [450, 320],
-//         });
-//         await QRCode.toDataURL(QRinput, {
-//           errorCorrectionLevel: "H",
-//           type: "image/jpeg",
-//           quality: 1,
-//           margin: 0.5,
-//           color: {
-//             dark: "#000000",
-//             light: "#ffdc00",
-//           },
-//         })
-//           .then((url) => {
-//             QRurl = url;
-//           })
-//           .catch((err) => {
-//             console.error(err);
-//           });
-//         // QRurl = QRurl.split(";base64,").pop();
-//         // const buffer = Buffer.from(QRurl, "base64");
-//         // const QRJpg = await sharp(buffer)
-//         //   .toColourspace("cmyk")
-//         //   .jpeg({
-//         //     quality: 100,
-//         //     chromaSubsampling: "4:4:4",
-//         //   })
-//         //   .toBuffer();
-//         doc.addFileToVFS("sans.ttf", font);
-//         doc.addFont("sans.ttf", "sans", "normal");
-//         doc.setFont("sans");
-//         doc.setFillColor(0.02, 0.1, 1.0, 0.0);
-//         doc.rect(5, 5, 310, 310, "FD");
-//         doc.setFillColor(0.02, 0.1, 1.0, 0.0);
-//         doc.rect(320, 5, 125, 310, "FD");
-//         doc.setLineWidth(2);
-//         doc.rect(10, 10, 300, 300, "FD");
-//         doc.setFontSize(23);
-//         doc.text("Текст инструкции:", 335, 200);
-//         doc.text("Тут будет инструкция", 335, 220);
-//         doc.text("Валидационный код:", 335, 290);
-//         doc.text(CodePrint, 335, 300);
-//         doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
-//         doc.save(file);
-//         archive.file(file, { name: filename });
-//         filenameArray.push(filename);
-//         ind += 1;
-//         const PrizeObj: IPrize = new Prize({
-//           code: CodeFinal,
-//           value: price,
-//           validated: false,
-//           date: Date.now(),
-//           qr: undefined,
-//         });
-//         const QRObj: IQR = new QR({ code: QR_CODE, url: QRinput });
-//         QR_ARRAY.push(QRObj);
-//         PRIZE_ARRAY.push(PrizeObj);
-//       }
-//     };
-//     await func(QRNumber);
-//     res.on("finish", async () => {
-//       // fs.unlink(
-//       //   path.resolve(__dirname + `/../public/archive/` + archName),
-//       //   (err) => {
-//       //     if (err) throw err;
-//       //   }
-//       // );
-//     });
-//     output.on("close", async () => {
-//       const NewBundle = new Bundle({
-//         amount: QRNumber,
-//         date: new Date(),
-//         value: price,
-//         archive_path: `archive/${archName}`,
-//         prizes: PRIZE_ARRAY,
-//       });
-//       await NewBundle.save();
-//       await Prize.insertMany(PRIZE_ARRAY);
-//       await QR.insertMany(QR_ARRAY);
-//       res.json(
-//         NewBundle
-//         // path.resolve(__dirname + `/../public/archive/` + archName),
-//         // archName
-//       );
-//     });
-//     await archive.finalize();
-//     const directory = __dirname + "/../public/pdf";
-//     for (const file of filenameArray) {
-//       fs.unlink(path.join(directory, file), (err) => {
-//         if (err) throw err;
-//       });
-//     }
-//     console.log(path.resolve(__dirname + `/../public/archive/` + archName));
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ err: "server error" });
-//   }
-// });
 // check QR
 router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -299,7 +157,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 }));
 // get all claimed prizes
-router.get("/find/claimed", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/find/claimed", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const codes = yield Prize_1.default.find({ player: { $ne: undefined } }).populate("player");
         res.json(codes);
@@ -310,7 +168,7 @@ router.get("/find/claimed", (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 }));
 // get all validated codes
-router.get("/find/validated", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/find/validated", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const codes = yield Prize_1.default.find({ validated: true }).populate("player");
         res.json(codes);
@@ -320,8 +178,20 @@ router.get("/find/validated", (req, res) => __awaiter(void 0, void 0, void 0, fu
         return res.status(500).json({ err: "server error" });
     }
 }));
+// get all codes
+router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log(req.user);
+        const codes = yield Prize_1.default.find({}).populate("player");
+        res.json(codes);
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
 // generator
-router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let date = new Date();
         date =
@@ -423,6 +293,7 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 value: price,
                 archive_path: `archive/${archName}`,
                 prizes: PRIZE_ARRAY,
+                qrs: QR_ARRAY,
             });
             yield NewBundle.save();
             yield Prize_1.default.insertMany(PRIZE_ARRAY);

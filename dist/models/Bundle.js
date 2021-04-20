@@ -34,6 +34,13 @@ const BundleSchema = new mongoose_1.Schema({
             default: [],
         },
     ],
+    qrs: [
+        {
+            type: mongoose_1.Schema.Types.ObjectId,
+            ref: "qr",
+            default: [],
+        }
+    ]
 });
 exports.default = mongoose_1.model("bundle", BundleSchema);
 //# sourceMappingURL=Bundle.js.map

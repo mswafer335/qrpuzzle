@@ -36,8 +36,9 @@ const router = express_1.Router();
 const dotenv = __importStar(require("dotenv"));
 dotenv.config({ path: __dirname + "/.env" });
 const Player_1 = __importDefault(require("../models/Player"));
+const auth_1 = __importDefault(require("../middleware/auth"));
 // get all users
-router.get("/find/all", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield Player_1.default.find().populate("prizes");
         res.json(users);
@@ -48,7 +49,7 @@ router.get("/find/all", (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 }));
 // get single user
-router.get("/find/:phone", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/find/:phone", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield Player_1.default.findOne({
             phone: { $regex: req.params.phone, $options: "i" },
@@ -66,7 +67,7 @@ router.get("/find/:phone", (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 }));
 // get all users with >4k winnings
-router.get("/find/all/ndfl", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/find/all/ndfl", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield Player_1.default.find({ prize_sum: { $gt: 4000 } });
         res.json(users);

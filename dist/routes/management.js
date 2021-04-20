@@ -70,10 +70,10 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 }));
 // authentification
-router.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password } = req.body;
+router.post("/auth", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { password } = req.body;
     try {
-        const user = yield Admin_1.default.findOne({ email });
+        const user = yield Admin_1.default.findOne({ email: req.body.email });
         if (!user) {
             return res.status(400).json({
                 errors: [{ err: "Пользователь с указанным email не найден" }],
