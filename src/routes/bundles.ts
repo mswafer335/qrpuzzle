@@ -47,7 +47,7 @@ router.put("/change/print/:id", auth, async (req: Request, res: Response) => {
     bundle.printed = !bundle.printed;
     bundle.print_date = new Date();
     await bundle.save();
-    res.redirect(303, `/bundles/find/id/${req.params.id}`);
+    res.redirect(303, `/bundles/find/all`);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
