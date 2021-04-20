@@ -55,7 +55,7 @@ router.put("/change/print/:id", auth, async (req: Request, res: Response) => {
 });
 
 // download archive
-router.get("/download/:id", async (req: Request, res: Response) => {
+router.get("/download/:id", auth, async (req: Request, res: Response) => {
   const bundle = await Bundle.findOne({ _id: req.params.id });
   if (!bundle) {
     return res.status(404).json({ err: "Не найдено" });
@@ -73,7 +73,7 @@ router.get("/download/:id", async (req: Request, res: Response) => {
 router.delete("/delete/:id", auth, async (req: Request, res: Response) => {
   try {
     const bundle = await Bundle.findOne({ _id: req.params.id });
-    fs.unlinkSync(__dirname + "/public/" + bundle.archive_path);
+    fs.unlinkSync(__dirname + "/../public/" + bundle.archive_path);
     if (!bundle.printed) {
       await Prize.deleteMany({ _id: { $in: bundle.prizes } });
       await QR.deleteMany({ _id: { $in: bundle.qrs } });
