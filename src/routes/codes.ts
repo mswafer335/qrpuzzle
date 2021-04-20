@@ -208,7 +208,7 @@ router.post("/generatecodes", auth, async (req: Request, res: Response) => {
         const CodeFinal = code1 + code2 + code3 + code4;
         const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
         const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
-        const QRinput = "http://185.231.153.99:4666/validation/" + QR_CODE;
+        const QRinput = "https://win.buro82.ru/validation/" + QR_CODE;
 
         await QRCode.toDataURL(QRinput, {
           errorCorrectionLevel: "H",
