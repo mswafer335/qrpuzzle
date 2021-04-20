@@ -5,6 +5,7 @@ import { IQR } from "./QR-urls";
 export interface IPrize extends Document {
   code: string;
   date: Date;
+  activation_date: Date;
   value: number;
   printed: boolean;
   validated: boolean;
@@ -18,6 +19,9 @@ const PrizeSchema: Schema = new Schema({
     type: String,
   },
   date: {
+    type: Date,
+  },
+  activaton_date: {
     type: Date,
   },
   value: {

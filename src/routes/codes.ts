@@ -71,6 +71,7 @@ router.put("/win", async (req: Request, res: Response) => {
     }
     // prize.qr = qr._id;
     prize.validated = true;
+    prize.activation_date = new Date();
     // qr.validated = true;
     // qr.prize = prize._id;
     await prize.save();
@@ -155,7 +156,6 @@ router.get("/find/validated", auth, async (req: Request, res: Response) => {
 // get all codes
 router.get("/find/all", auth, async (req: Request, res: Response) => {
   try {
-    console.log(req.user)
     const codes = await Prize.find({}).populate("player");
     res.json(codes);
   } catch (error) {
