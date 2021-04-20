@@ -24,9 +24,10 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 // get single bundle
 router.get("/find/id/:id", auth, async (req: Request, res: Response) => {
   try {
-    const bundle = await Bundle.findOne({ _id: req.params.id }).populate(
-      "prizes"
-    );
+    const bundle = await Bundle.findOne({ _id: req.params.id }).populate({
+      path: "prize",
+      populate: { path: "player" },
+    });
     if (!bundle) {
       return res.status(404).json({ err: "Не найдено" });
     }
