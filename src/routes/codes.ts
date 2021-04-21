@@ -8,7 +8,7 @@ import auth from "../middleware/auth";
 
 const callbackWallet = new callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new asyncApi(process.env.QIWI_TOKEN);
-// import axios from "axios";
+import axios from "axios";
 // import Prize from "../models/Prize";
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
@@ -31,6 +31,30 @@ function makeid(length: number) {
   }
   return result;
 }
+
+// test
+router.post("/test", async (req, res) => {
+  try {
+    // const huy = await axios.post(
+    //   `https://edge.qiwi.com/sinap/providers/${req.body.receiver}/onlineCommission`,
+    //   {
+    //     account: "79788287717",
+    //     paymentMethod: { type: "Account", accountId: "643" },
+    //     purchaseTotals: { total: { amount: req.body.sum, currency: "643" } },
+    //   }
+    // );
+    // res.json(huy.data);
+    res.json(
+      await asyncWallet.checkOnlineCommission(req.body.receiver, {
+        account: "",
+        amount: req.body.sum,
+      })
+    );
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
 
 // check QR
 router.get("/qr/:qr", async (req: Request, res: Response) => {
@@ -56,7 +80,7 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
 // get prize
 router.put("/win", async (req: Request, res: Response) => {
   try {
-    console.log(req.body)
+    console.log(req.body);
     // const qr = await QR.findOne({ code: req.params.qr });
     const prize = await Prize.findOne({ code: req.body.code.toLowerCase() });
     if (!prize) {
@@ -95,7 +119,6 @@ router.put("/win", async (req: Request, res: Response) => {
 // claim prize
 router.put("/claim", async (req: Request, res: Response) => {
   try {
-
     let user = await Player.findOne({ phone: req.body.phone });
     const code = await Prize.findOne({ code: req.body.code.toLowerCase() });
     if (!code || code.player) {
@@ -124,7 +147,7 @@ router.put("/claim", async (req: Request, res: Response) => {
     await user.save();
     code.player = user;
     await code.save();
-    res.json({ msg: "пользователь привязан", PS:"сео соси" });
+    res.json({ msg: "пользователь привязан", PS: "сео соси" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
@@ -259,11 +282,15 @@ router.post("/generatecodes", auth, async (req: Request, res: Response) => {
         PRIZE_ARRAY.push(PrizeObj);
       }
     };
+    console.log("pre creation")
     await func(QRNumber);
     // res.on("finish", async () => {
     // });
+    console.log("post creation")
     doc.save(file);
+    console.log("save")
     archive.file(file, { name: filename });
+    console.log("post archive")
     filenameArray.push(filename);
     output.on("close", async () => {
       const NewBundle = new Bundle({
@@ -283,8 +310,11 @@ router.post("/generatecodes", auth, async (req: Request, res: Response) => {
         // archName
       );
     });
+    console.log("pre archive finalization")
     await archive.finalize();
+    console.log("post archive finalization")
     const directory = __dirname + "/../public/pdf";
+    console.log("deletion")
     for (const fuck of filenameArray) {
       fs.unlink(path.join(directory, fuck), (err) => {
         if (err) throw err;

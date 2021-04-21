@@ -40,7 +40,6 @@ dotenv.config({ path: __dirname + "/.env" });
 const auth_1 = __importDefault(require("../middleware/auth"));
 const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
-// import axios from "axios";
 // import Prize from "../models/Prize";
 const jspdf_1 = require("jspdf");
 const qrcode_1 = __importDefault(require("qrcode"));
@@ -62,6 +61,28 @@ function makeid(length) {
     }
     return result;
 }
+// test
+router.post("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // const huy = await axios.post(
+        //   `https://edge.qiwi.com/sinap/providers/${req.body.receiver}/onlineCommission`,
+        //   {
+        //     account: "79788287717",
+        //     paymentMethod: { type: "Account", accountId: "643" },
+        //     purchaseTotals: { total: { amount: req.body.sum, currency: "643" } },
+        //   }
+        // );
+        // res.json(huy.data);
+        res.json(yield asyncWallet.checkOnlineCommission(req.body.receiver, {
+            account: "79788287717",
+            amount: req.body.sum,
+        }));
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
 // check QR
 router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -86,8 +107,9 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
 // get prize
 router.put("/win", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log(req.body);
         // const qr = await QR.findOne({ code: req.params.qr });
-        const prize = yield Prize_1.default.findOne({ code: req.body.code });
+        const prize = yield Prize_1.default.findOne({ code: req.body.code.toLowerCase() });
         if (!prize) {
             return res
                 .status(400)
@@ -101,6 +123,7 @@ router.put("/win", (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         // prize.qr = qr._id;
         prize.validated = true;
+        prize.activation_date = new Date();
         // qr.validated = true;
         // qr.prize = prize._id;
         yield prize.save();
@@ -121,7 +144,7 @@ router.put("/win", (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let user = yield Player_1.default.findOne({ phone: req.body.phone });
-        const code = yield Prize_1.default.findOne({ code: req.body.code });
+        const code = yield Prize_1.default.findOne({ code: req.body.code.toLowerCase() });
         if (!code || code.player) {
             return res.status(400).json({ err: "Код невалиден" });
         }
@@ -149,7 +172,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         yield user.save();
         code.player = user;
         yield code.save();
-        res.json({ msg: "хуе мое приз привязан к юзеру" });
+        res.json({ msg: "пользователь привязан", PS: "сео соси" });
     }
     catch (error) {
         console.error(error);
@@ -181,7 +204,6 @@ router.get("/find/validated", auth_1.default, (req, res) => __awaiter(void 0, vo
 // get all codes
 router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log(req.user);
         const codes = yield Prize_1.default.find({}).populate("player");
         res.json(codes);
     }
@@ -232,7 +254,7 @@ router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, vo
                 const CodeFinal = code1 + code2 + code3 + code4;
                 const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
                 const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
-                const QRinput = "http://185.231.153.99:4666/validation/" + QR_CODE;
+                const QRinput = process.env.win_url + QR_CODE;
                 yield qrcode_1.default.toDataURL(QRinput, {
                     errorCorrectionLevel: "H",
                     type: "image/jpeg",

@@ -69,7 +69,7 @@ router.get("/find/:phone", auth_1.default, (req, res) => __awaiter(void 0, void 
 // get all users with >4k winnings
 router.get("/find/all/ndfl", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const users = yield Player_1.default.find({ prize_sum: { $gt: 4000 } });
+        const users = yield Player_1.default.find({ prize_sum: { $gt: 4000 } }).populate("prizes");
         res.json(users);
     }
     catch (error) {

@@ -55,7 +55,10 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
 // get single bundle
 router.get("/find/id/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const bundle = yield Bundle_1.default.findOne({ _id: req.params.id }).populate("prizes");
+        const bundle = yield Bundle_1.default.findOne({ _id: req.params.id }).populate({
+            path: "prizes",
+            populate: { path: "player" },
+        });
         if (!bundle) {
             return res.status(404).json({ err: "Не найдено" });
         }
@@ -76,7 +79,7 @@ router.put("/change/print/:id", auth_1.default, (req, res) => __awaiter(void 0, 
         bundle.printed = !bundle.printed;
         bundle.print_date = new Date();
         yield bundle.save();
-        res.redirect(303, `/bundles/find/id/${req.params.id}`);
+        res.redirect(303, `/bundles/find/all`);
     }
     catch (error) {
         console.error(error);
@@ -98,7 +101,7 @@ router.get("/download/:id", auth_1.default, (req, res) => __awaiter(void 0, void
 router.delete("/delete/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const bundle = yield Bundle_1.default.findOne({ _id: req.params.id });
-        fs_1.default.unlinkSync(__dirname + "/public/" + bundle.archive_path);
+        fs_1.default.unlinkSync(__dirname + "/../public/" + bundle.archive_path);
         if (!bundle.printed) {
             yield Prize_1.default.deleteMany({ _id: { $in: bundle.prizes } });
             yield QR_urls_1.default.deleteMany({ _id: { $in: bundle.qrs } });

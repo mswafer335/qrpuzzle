@@ -8,6 +8,9 @@ const PrizeSchema = new mongoose_1.Schema({
     date: {
         type: Date,
     },
+    activaton_date: {
+        type: Date,
+    },
     value: {
         type: Number,
     },
