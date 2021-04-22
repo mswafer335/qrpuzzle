@@ -177,17 +177,20 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
         PRIZE_QUERY[key] = req.query[key];
       }
     }
-    console.log("req.query",req.query)
-    console.log("PRIZE_QUERY",PRIZE_QUERY)
+    console.log("req.query", req.query);
+    console.log("PRIZE_QUERY", PRIZE_QUERY);
     let codes = await Prize.find(PRIZE_QUERY).populate("player");
-    console.log(codes)
+    console.log("pre reg", codes);
     if (req.query.fullname) {
       // @ts-ignore:
       const regex = new RegExp(req.query.fullname, "g");
       codes = codes.filter((el) => {
+        console.log(el.player.fullname);
+        console.log(el.player.fullname.match(regex));
         el.player.fullname.match(regex);
       });
     }
+    console.log("post reg", codes);
     if (req.query.phone) {
       // @ts-ignore:
       const regex = new RegExp(req.query.phone, "g");
@@ -195,6 +198,7 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
         el.player.phone.match(regex);
       });
     }
+    console.log("sent", codes);
     res.json(codes);
   } catch (error) {
     console.error(error);
@@ -394,7 +398,6 @@ router.post("/genold", async (req: Request, res: Response) => {
   }
 });
 
-
 /// gen chunk
 router.get("/generatecodes", async (req: Request, res: Response) => {
   try {
@@ -425,7 +428,7 @@ router.get("/generatecodes", async (req: Request, res: Response) => {
       let a: number = 1;
       const filename = start + "-" + end + ".pdf";
       const file = __dirname + `/../public/pdf/${filename}`;
-      console.log("pre")
+      console.log("pre");
       const doc = new jsPDF({
         orientation: "landscape",
         unit: "mm",
@@ -487,11 +490,11 @@ router.get("/generatecodes", async (req: Request, res: Response) => {
         PRIZE_ARRAY.push(PrizeObj);
         a += 1;
       }
-      console.log("save")
+      console.log("save");
       doc.save(file);
       archive.file(file, { name: filename });
       filenameArray.push(filename);
-      console.log("next cycle")
+      console.log("next cycle");
     };
     const func = async (count: number) => {
       let ind = 0;
