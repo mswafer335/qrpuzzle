@@ -184,14 +184,14 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
       codes = codes.filter((el) => {
         console.log(el.player.fullname);
         console.log(regex.test(el.player.fullname));
-        regex.test(el.player.fullname);
+        return regex.test(el.player.fullname);
       });
     }
     if (req.query.phone) {
       // @ts-ignore:
       const regex = new RegExp(req.query.phone);
       codes = codes.filter((el) => {
-        regex.test(el.player.phone);
+        return regex.test(el.player.phone);
       });
     }
     console.log(codes)
