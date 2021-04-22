@@ -180,19 +180,19 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
     let codes = await Prize.find(PRIZE_QUERY).populate("player");
     if (req.query.fullname) {
       // @ts-ignore:
-      // const regex = new RegExp(req.query.fullname, "g");
+      const regex = new RegExp(req.query.fullname, "g");
       codes = codes.filter((el) => {
-        // console.log(el.player.fullname);
-        // console.log(el.player.fullname.includes(regex));
-        el.player.fullname.includes(req.query.fullname);
+        console.log(el.player.fullname);
+        console.log(el.player.fullname.test(regex));
+        el.player.fullname.test(regex);
       });
     }
     console.log("post reg", codes);
     if (req.query.phone) {
       // @ts-ignore:
-      // const regex = new RegExp(req.query.phone, "g");
+      const regex = new RegExp(req.query.phone, "g");
       codes = codes.filter((el) => {
-        el.player.phone.includes(req.query.phone);
+        el.player.phone.test(regex);
       });
     }
     console.log(codes)
