@@ -14,9 +14,9 @@ import auth from "../middleware/auth";
 // get all users
 router.get("/find/all", auth, async (req: Request, res: Response) => {
   try {
-    let keys = Object.keys(req.query);
-    let QUERY_OBJ: any = {};
-    for (let key of keys) {
+    const keys = Object.keys(req.query);
+    const QUERY_OBJ: any = {};
+    for (const key of keys) {
       QUERY_OBJ[key] = req.query[key];
     }
     const users = await Player.find(QUERY_OBJ).populate("prizes");
@@ -48,11 +48,11 @@ router.get("/find/:phone", auth, async (req: Request, res: Response) => {
 // get all users with >4k winnings
 router.get("/find/all/ndfl", auth, async (req: Request, res: Response) => {
   try {
-    let keys = Object.keys(req.query);
-    let QUERY_OBJ: any = {
+    const keys = Object.keys(req.query);
+    const QUERY_OBJ: any = {
       prize_sum: { $gt: 4000 },
     };
-    for (let key of keys) {
+    for (const key of keys) {
       QUERY_OBJ[key] = req.query[key];
     }
     const users = await Player.find(QUERY_OBJ).populate("prizes");

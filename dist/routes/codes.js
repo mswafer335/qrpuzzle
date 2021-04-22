@@ -183,7 +183,40 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
 // get all claimed prizes
 router.get("/find/claimed", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const codes = yield Prize_1.default.find({ player: { $ne: undefined } }).populate("player");
+        const keys = Object.keys(req.query);
+        const PRIZE_QUERY = {
+            player: { $ne: undefined },
+        };
+        for (const key of keys) {
+            if (req.query[key] === "true") {
+                // @ts-ignore:
+                req.query[key] = true;
+            }
+            if (req.query[key] === "false") {
+                // @ts-ignore:
+                req.query[key] = false;
+            }
+        }
+        for (const key of keys) {
+            if (key !== "fullname" && key !== "phone") {
+                PRIZE_QUERY[key] = req.query[key];
+            }
+        }
+        let codes = yield Prize_1.default.find(PRIZE_QUERY).populate("player");
+        if (req.query.fullname) {
+            // @ts-ignore:
+            const regex = new RegExp(req.query.fullname, "g");
+            codes = codes.filter((el) => {
+                el.player.fullname.match(regex);
+            });
+        }
+        if (req.query.phone) {
+            // @ts-ignore:
+            const regex = new RegExp(req.query.phone, "g");
+            codes = codes.filter((el) => {
+                el.player.phone.match(regex);
+            });
+        }
         res.json(codes);
     }
     catch (error) {
@@ -208,6 +241,16 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
         const keys = Object.keys(req.query);
         const PRIZE_QUERY = {};
         for (const key of keys) {
+            if (req.query[key] === "true") {
+                // @ts-ignore:
+                req.query[key] = true;
+            }
+            if (req.query[key] === "false") {
+                // @ts-ignore:
+                req.query[key] = false;
+            }
+        }
+        for (const key of keys) {
             if (key !== "fullname" && key !== "phone") {
                 PRIZE_QUERY[key] = req.query[key];
             }
@@ -216,12 +259,16 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
         if (req.query.fullname) {
             // @ts-ignore:
             const regex = new RegExp(req.query.fullname, "g");
-            codes = codes.filter((el) => { el.player.fullname.match(regex); });
+            codes = codes.filter((el) => {
+                el.player.fullname.match(regex);
+            });
         }
         if (req.query.phone) {
             // @ts-ignore:
             const regex = new RegExp(req.query.phone, "g");
-            codes = codes.filter((el) => { el.player.phone.match(regex); });
+            codes = codes.filter((el) => {
+                el.player.phone.match(regex);
+            });
         }
         res.json(codes);
     }
@@ -261,6 +308,7 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
             orientation: "landscape",
             unit: "mm",
             format: [450, 320],
+            compress: false,
         });
         const func = (count) => __awaiter(void 0, void 0, void 0, function* () {
             let ind = 1;
@@ -274,9 +322,9 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
                 const QRinput = process.env.win_url + QR_CODE;
                 yield qrcode_1.default.toDataURL(QRinput, {
-                    errorCorrectionLevel: "H",
+                    // errorCorrectionLevel: "H",
                     type: "image/jpeg",
-                    // quality: 1,
+                    // quality: 0.2,
                     margin: 0.5,
                     color: {
                         dark: "#000000",
@@ -306,7 +354,7 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 doc.text("Тут будет инструкция", 335, 220);
                 doc.text("Валидационный код:", 335, 290);
                 doc.text(CodePrint, 335, 300);
-                doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
+                doc.addImage(QRurl, "jpeg", 15, 15, 290, 290, "MEDIUM");
                 ind += 1;
                 const PrizeObj = new Prize_1.default({
                     code: CodeFinal,
@@ -359,6 +407,289 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
             });
         }
         console.log(path_1.default.resolve(__dirname + `/../public/archive/` + archName));
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
+// gen chunk test
+router.post("/gentest", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let date = new Date();
+        date =
+            date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
+        let QRurl;
+        const QRNumber = req.body.count;
+        const price = req.body.price;
+        const archName = `${date}-${price.toString()}-${QRNumber}-${Math.random()
+            .toString(36)
+            .substr(2, 6)
+            .toLowerCase()}.zip`;
+        const filenameArray = [];
+        const output = fs_1.default.createWriteStream(__dirname + "/../public/archive/" + archName);
+        const archive = archiver_1.default("zip", {
+            zlib: { level: 6 },
+        });
+        archive.pipe(output);
+        archive.on("error", (err) => {
+            if (err)
+                throw err;
+        });
+        const QR_ARRAY = [];
+        const PRIZE_ARRAY = [];
+        const filename = Math.random().toString(36).substr(2, 6).toLowerCase() + ".pdf";
+        const file = __dirname + `/../public/pdf/${filename}`;
+        const doc = new jspdf_1.jsPDF({
+            orientation: "landscape",
+            unit: "mm",
+            format: [450, 320],
+            compress: false,
+        });
+        const func = (count) => __awaiter(void 0, void 0, void 0, function* () {
+            let ind = 1;
+            while (ind <= count) {
+                const code1 = Math.random().toString(36).substr(3, 4).toLowerCase();
+                const code2 = Math.random().toString(36).substr(3, 4).toLowerCase();
+                const code3 = Math.random().toString(36).substr(3, 4).toLowerCase();
+                const code4 = Date.now().toString(36).substr(4).toLowerCase();
+                const CodeFinal = code1 + code2 + code3 + code4;
+                const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
+                const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
+                const QRinput = process.env.win_url + QR_CODE;
+                yield qrcode_1.default.toDataURL(QRinput, {
+                    // errorCorrectionLevel: "H",
+                    type: "image/jpeg",
+                    // quality: 0.2,
+                    margin: 0.5,
+                    color: {
+                        dark: "#000000",
+                        light: "#ffdc00",
+                    },
+                })
+                    .then((url) => {
+                    QRurl = url;
+                })
+                    .catch((err) => {
+                    console.error(err);
+                });
+                if (ind > 1) {
+                    doc.addPage();
+                }
+                doc.addFileToVFS("sans.ttf", sans_1.font);
+                doc.addFont("sans.ttf", "sans", "normal");
+                doc.setFont("sans");
+                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
+                doc.rect(5, 5, 310, 310, "FD");
+                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
+                doc.rect(320, 5, 125, 310, "FD");
+                // doc.setLineWidth(2);
+                // doc.rect(10, 10, 300, 300, "FD");
+                doc.setFontSize(23);
+                doc.text("Текст инструкции:", 335, 200);
+                doc.text("Тут будет инструкция", 335, 220);
+                doc.text("Валидационный код:", 335, 290);
+                doc.text(CodePrint, 335, 300);
+                doc.addImage(QRurl, "jpeg", 15, 15, 290, 290, "MEDIUM");
+                ind += 1;
+                const PrizeObj = new Prize_1.default({
+                    code: CodeFinal,
+                    value: price,
+                    validated: false,
+                    date: Date.now(),
+                    qr: undefined,
+                });
+                const QRObj = new QR_urls_1.default({ code: QR_CODE, url: QRinput });
+                QR_ARRAY.push(QRObj);
+                PRIZE_ARRAY.push(PrizeObj);
+            }
+        });
+        console.log("pre creation");
+        yield func(QRNumber);
+        // res.on("finish", async () => {
+        // });
+        console.log("post creation");
+        doc.save(file);
+        console.log("save");
+        archive.file(file, { name: filename });
+        console.log("post archive");
+        filenameArray.push(filename);
+        output.on("close", () => __awaiter(void 0, void 0, void 0, function* () {
+            const NewBundle = new Bundle_1.default({
+                amount: QRNumber,
+                date: new Date(),
+                value: price,
+                archive_path: `archive/${archName}`,
+                prizes: PRIZE_ARRAY,
+                qrs: QR_ARRAY,
+            });
+            yield NewBundle.save();
+            yield Prize_1.default.insertMany(PRIZE_ARRAY);
+            yield QR_urls_1.default.insertMany(QR_ARRAY);
+            res.json(NewBundle
+            // path.resolve(__dirname + `/../public/archive/` + archName),
+            // archName
+            );
+        }));
+        console.log("pre archive finalization");
+        yield archive.finalize();
+        console.log("post archive finalization");
+        const directory = __dirname + "/../public/pdf";
+        console.log("deletion");
+        for (const fuck of filenameArray) {
+            fs_1.default.unlink(path_1.default.join(directory, fuck), (err) => {
+                if (err)
+                    throw err;
+            });
+        }
+        console.log(path_1.default.resolve(__dirname + `/../public/archive/` + archName));
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
+/// aaa
+router.get("/sadas", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let date = new Date();
+        date =
+            date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
+        let QRurl;
+        const QRNumber = req.body.count;
+        const price = req.body.price;
+        const archName = `${date}-${price.toString()}-${QRNumber}-${Math.random()
+            .toString(36)
+            .substr(2, 6)
+            .toLowerCase()}.zip`;
+        const filenameArray = [];
+        const output = fs_1.default.createWriteStream(__dirname + "/../public/archive/" + archName);
+        const archive = archiver_1.default("zip", {
+            zlib: { level: 6 },
+        });
+        archive.pipe(output);
+        archive.on("error", (err) => {
+            if (err)
+                throw err;
+        });
+        const QR_ARRAY = [];
+        const PRIZE_ARRAY = [];
+        const func2 = (num, start, end) => __awaiter(void 0, void 0, void 0, function* () {
+            let a = 1;
+            const filename = start + "-" + end + ".pdf";
+            const file = __dirname + `/../public/pdf/${filename}`;
+            console.log("pre");
+            const doc = new jspdf_1.jsPDF({
+                orientation: "landscape",
+                unit: "mm",
+                format: [450, 320],
+            });
+            while (a <= num) {
+                const code1 = Math.random().toString(36).substr(3, 4).toLowerCase();
+                const code2 = Math.random().toString(36).substr(3, 4).toLowerCase();
+                const code3 = Math.random().toString(36).substr(3, 4).toLowerCase();
+                const code4 = Date.now().toString(36).substr(4).toLowerCase();
+                const CodeFinal = code1 + code2 + code3 + code4;
+                const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
+                const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
+                const QRinput = process.env.win_url + QR_CODE;
+                yield qrcode_1.default.toDataURL(QRinput, {
+                    errorCorrectionLevel: "H",
+                    type: "image/jpeg",
+                    // quality: 0.2,
+                    margin: 0.5,
+                    color: {
+                        dark: "#000000",
+                        light: "#ffdc00",
+                    },
+                })
+                    .then((url) => {
+                    QRurl = url;
+                })
+                    .catch((err) => {
+                    console.error(err);
+                });
+                if (a > 1) {
+                    doc.addPage();
+                }
+                doc.addFileToVFS("sans.ttf", sans_1.font);
+                doc.addFont("sans.ttf", "sans", "normal");
+                doc.setFont("sans");
+                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
+                doc.rect(5, 5, 310, 310, "FD");
+                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
+                doc.rect(320, 5, 125, 310, "FD");
+                // doc.setLineWidth(2);
+                // doc.rect(10, 10, 300, 300, "FD");
+                doc.setFontSize(23);
+                doc.text("Текст инструкции:", 335, 200);
+                doc.text("Тут будет инструкция", 335, 220);
+                doc.text("Валидационный код:", 335, 290);
+                doc.text(CodePrint, 335, 300);
+                doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
+                const PrizeObj = new Prize_1.default({
+                    code: CodeFinal,
+                    value: price,
+                    validated: false,
+                    date: Date.now(),
+                    qr: undefined,
+                });
+                const QRObj = new QR_urls_1.default({ code: QR_CODE, url: QRinput });
+                QR_ARRAY.push(QRObj);
+                PRIZE_ARRAY.push(PrizeObj);
+                a += 1;
+            }
+            console.log("save");
+            doc.save(file);
+            archive.file(file, { name: filename });
+            filenameArray.push(filename);
+            console.log("next cycle");
+        });
+        const func = (count) => __awaiter(void 0, void 0, void 0, function* () {
+            let ind = 0;
+            let indGovna = 1;
+            let countTwo = count;
+            while (ind < count) {
+                if (countTwo >= 1000) {
+                    ind += 1000;
+                    countTwo -= 1000;
+                    yield func2(1000, indGovna, ind);
+                    indGovna += 1000;
+                }
+                else {
+                    ind += 1;
+                    yield func2(countTwo, ind, count);
+                    break;
+                }
+            }
+        });
+        yield func(QRNumber);
+        output.on("close", () => __awaiter(void 0, void 0, void 0, function* () {
+            const NewBundle = new Bundle_1.default({
+                amount: QRNumber,
+                date: new Date(),
+                value: price,
+                archive_path: `archive/${archName}`,
+                prizes: PRIZE_ARRAY,
+                qrs: QR_ARRAY,
+            });
+            yield NewBundle.save();
+            yield Prize_1.default.insertMany(PRIZE_ARRAY);
+            yield QR_urls_1.default.insertMany(QR_ARRAY);
+            res.json("е бой"
+            // NewBundle
+            // path.resolve(__dirname + `/../public/archive/` + archName),
+            // archName
+            );
+        }));
+        yield archive.finalize();
+        const directory = __dirname + "/../public/pdf";
+        for (const fuck of filenameArray) {
+            fs_1.default.unlink(path_1.default.join(directory, fuck), (err) => {
+                if (err)
+                    throw err;
+            });
+        }
     }
     catch (error) {
         console.error(error);
