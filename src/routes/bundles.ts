@@ -13,7 +13,12 @@ import auth from "../middleware/auth";
 // get all bundles
 router.get("/find/all", auth, async (req: Request, res: Response) => {
   try {
-    const bundles = await Bundle.find();
+    const QUERY_OBJ: any = {};
+    const keys = Object.keys(req.query);
+    for (const key of keys) {
+      QUERY_OBJ[key] = req.query[key];
+    }
+    const bundles = await Bundle.find(QUERY_OBJ);
     return res.json(bundles);
   } catch (error) {
     console.error(error);

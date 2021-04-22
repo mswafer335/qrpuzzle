@@ -44,7 +44,12 @@ const auth_1 = __importDefault(require("../middleware/auth"));
 // get all bundles
 router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const bundles = yield Bundle_1.default.find();
+        const QUERY_OBJ = {};
+        const keys = Object.keys(req.query);
+        for (const key of keys) {
+            QUERY_OBJ[key] = req.query[key];
+        }
+        const bundles = yield Bundle_1.default.find(QUERY_OBJ);
         return res.json(bundles);
     }
     catch (error) {

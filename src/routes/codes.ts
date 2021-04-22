@@ -143,6 +143,7 @@ router.put("/claim", async (req: Request, res: Response) => {
       const num = user.prize_sum - 4000;
       const tax = num * 0.35;
       user.sum_ndfl = user.prize_sum - tax;
+      user.tax_sum = tax;
     }
     await user.save();
     code.player = user;
@@ -157,9 +158,40 @@ router.put("/claim", async (req: Request, res: Response) => {
 // get all claimed prizes
 router.get("/find/claimed", auth, async (req: Request, res: Response) => {
   try {
-    const codes = await Prize.find({ player: { $ne: undefined } }).populate(
-      "player"
-    );
+    const keys = Object.keys(req.query);
+    const PRIZE_QUERY: any = {
+      player: { $ne: undefined },
+    };
+    for (let key of keys) {
+      if (req.query[key] === "true") {
+        // @ts-ignore:
+        req.query[key] = true;
+      }
+      if (req.query[key] === "false") {
+        // @ts-ignore:
+        req.query[key] = false;
+      }
+    }
+    for (const key of keys) {
+      if (key !== "fullname" && key !== "phone") {
+        PRIZE_QUERY[key] = req.query[key];
+      }
+    }
+    let codes = await Prize.find(PRIZE_QUERY).populate("player");
+    if (req.query.fullname) {
+      // @ts-ignore:
+      const regex = new RegExp(req.query.fullname, "g");
+      codes = codes.filter((el) => {
+        el.player.fullname.match(regex);
+      });
+    }
+    if (req.query.phone) {
+      // @ts-ignore:
+      const regex = new RegExp(req.query.phone, "g");
+      codes = codes.filter((el) => {
+        el.player.phone.match(regex);
+      });
+    }
     res.json(codes);
   } catch (error) {
     console.error(error);
@@ -181,7 +213,38 @@ router.get("/find/validated", auth, async (req: Request, res: Response) => {
 // get all codes
 router.get("/find/all", auth, async (req: Request, res: Response) => {
   try {
-    const codes = await Prize.find({}).populate("player");
+    const keys = Object.keys(req.query);
+    const PRIZE_QUERY: any = {};
+    for (let key of keys) {
+      if (req.query[key] === "true") {
+        // @ts-ignore:
+        req.query[key] = true;
+      }
+      if (req.query[key] === "false") {
+        // @ts-ignore:
+        req.query[key] = false;
+      }
+    }
+    for (const key of keys) {
+      if (key !== "fullname" && key !== "phone") {
+        PRIZE_QUERY[key] = req.query[key];
+      }
+    }
+    let codes = await Prize.find(PRIZE_QUERY).populate("player");
+    if (req.query.fullname) {
+      // @ts-ignore:
+      const regex = new RegExp(req.query.fullname, "g");
+      codes = codes.filter((el) => {
+        el.player.fullname.match(regex);
+      });
+    }
+    if (req.query.phone) {
+      // @ts-ignore:
+      const regex = new RegExp(req.query.phone, "g");
+      codes = codes.filter((el) => {
+        el.player.phone.match(regex);
+      });
+    }
     res.json(codes);
   } catch (error) {
     console.error(error);
@@ -190,7 +253,7 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 });
 
 // generator
-router.post("/generatecodes", auth, async (req: Request, res: Response) => {
+router.post("/generatecodes", async (req: Request, res: Response) => {
   try {
     let date: any = new Date();
     date =
@@ -282,15 +345,15 @@ router.post("/generatecodes", auth, async (req: Request, res: Response) => {
         PRIZE_ARRAY.push(PrizeObj);
       }
     };
-    console.log("pre creation")
+    console.log("pre creation");
     await func(QRNumber);
     // res.on("finish", async () => {
     // });
-    console.log("post creation")
+    console.log("post creation");
     doc.save(file);
-    console.log("save")
+    console.log("save");
     archive.file(file, { name: filename });
-    console.log("post archive")
+    console.log("post archive");
     filenameArray.push(filename);
     output.on("close", async () => {
       const NewBundle = new Bundle({
@@ -310,11 +373,11 @@ router.post("/generatecodes", auth, async (req: Request, res: Response) => {
         // archName
       );
     });
-    console.log("pre archive finalization")
+    console.log("pre archive finalization");
     await archive.finalize();
-    console.log("post archive finalization")
+    console.log("post archive finalization");
     const directory = __dirname + "/../public/pdf";
-    console.log("deletion")
+    console.log("deletion");
     for (const fuck of filenameArray) {
       fs.unlink(path.join(directory, fuck), (err) => {
         if (err) throw err;

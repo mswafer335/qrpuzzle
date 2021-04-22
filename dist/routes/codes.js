@@ -74,7 +74,7 @@ router.post("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         // );
         // res.json(huy.data);
         res.json(yield asyncWallet.checkOnlineCommission(req.body.receiver, {
-            account: "79788287717",
+            account: "",
             amount: req.body.sum,
         }));
     }
@@ -168,6 +168,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             const num = user.prize_sum - 4000;
             const tax = num * 0.35;
             user.sum_ndfl = user.prize_sum - tax;
+            user.tax_sum = tax;
         }
         yield user.save();
         code.player = user;
@@ -204,7 +205,24 @@ router.get("/find/validated", auth_1.default, (req, res) => __awaiter(void 0, vo
 // get all codes
 router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const codes = yield Prize_1.default.find({}).populate("player");
+        const keys = Object.keys(req.query);
+        const PRIZE_QUERY = {};
+        for (const key of keys) {
+            if (key !== "fullname" && key !== "phone") {
+                PRIZE_QUERY[key] = req.query[key];
+            }
+        }
+        let codes = yield Prize_1.default.find(PRIZE_QUERY).populate("player");
+        if (req.query.fullname) {
+            // @ts-ignore:
+            const regex = new RegExp(req.query.fullname, "g");
+            codes = codes.filter((el) => { el.player.fullname.match(regex); });
+        }
+        if (req.query.phone) {
+            // @ts-ignore:
+            const regex = new RegExp(req.query.phone, "g");
+            codes = codes.filter((el) => { el.player.phone.match(regex); });
+        }
         res.json(codes);
     }
     catch (error) {
@@ -213,7 +231,7 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
     }
 }));
 // generator
-router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let date = new Date();
         date =
@@ -302,11 +320,15 @@ router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, vo
                 PRIZE_ARRAY.push(PrizeObj);
             }
         });
+        console.log("pre creation");
         yield func(QRNumber);
         // res.on("finish", async () => {
         // });
+        console.log("post creation");
         doc.save(file);
+        console.log("save");
         archive.file(file, { name: filename });
+        console.log("post archive");
         filenameArray.push(filename);
         output.on("close", () => __awaiter(void 0, void 0, void 0, function* () {
             const NewBundle = new Bundle_1.default({
@@ -325,8 +347,11 @@ router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, vo
             // archName
             );
         }));
+        console.log("pre archive finalization");
         yield archive.finalize();
+        console.log("post archive finalization");
         const directory = __dirname + "/../public/pdf";
+        console.log("deletion");
         for (const fuck of filenameArray) {
             fs_1.default.unlink(path_1.default.join(directory, fuck), (err) => {
                 if (err)
