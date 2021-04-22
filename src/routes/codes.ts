@@ -180,6 +180,7 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
     console.log("req.query",req.query)
     console.log("PRIZE_QUERY",PRIZE_QUERY)
     let codes = await Prize.find(PRIZE_QUERY).populate("player");
+    console.log(codes)
     if (req.query.fullname) {
       // @ts-ignore:
       const regex = new RegExp(req.query.fullname, "g");
