@@ -182,9 +182,9 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
       // @ts-ignore:
       const regex = new RegExp(req.query.fullname, "g");
       codes = codes.filter((el) => {
-        console.log(el.player.fullname);
-        console.log(el.player.fullname.test(regex));
-        el.player.fullname.test(regex);
+        // console.log(el.player.fullname);
+        // console.log(el.player.fullname.test(regex));
+        regex.test(el.player.fullname);
       });
     }
     console.log("post reg", codes);
@@ -192,7 +192,7 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
       // @ts-ignore:
       const regex = new RegExp(req.query.phone, "g");
       codes = codes.filter((el) => {
-        el.player.phone.test(regex);
+        regex.test(el.player.phone);
       });
     }
     console.log(codes)
