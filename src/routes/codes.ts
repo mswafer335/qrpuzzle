@@ -177,17 +177,14 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
         PRIZE_QUERY[key] = req.query[key];
       }
     }
-    console.log("req.query", req.query);
-    console.log("PRIZE_QUERY", PRIZE_QUERY);
     let codes = await Prize.find(PRIZE_QUERY).populate("player");
-    console.log("pre reg", codes);
     if (req.query.fullname) {
       // @ts-ignore:
       const regex = new RegExp(req.query.fullname, "g");
       codes = codes.filter((el) => {
         console.log(el.player.fullname);
-        console.log(el.player.fullname.match(regex));
-        el.player.fullname.match(regex);
+        console.log(el.player.fullname.includes(regex));
+        el.player.fullname.includes(regex);
       });
     }
     console.log("post reg", codes);
@@ -195,10 +192,10 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
       // @ts-ignore:
       const regex = new RegExp(req.query.phone, "g");
       codes = codes.filter((el) => {
-        el.player.phone.match(regex);
+        el.player.phone.includes(regex);
       });
     }
-    console.log("sent", codes);
+    console.log(codes)
     res.json(codes);
   } catch (error) {
     console.error(error);
