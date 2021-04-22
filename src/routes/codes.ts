@@ -182,8 +182,6 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
       // @ts-ignore:
       const regex = new RegExp(req.query.fullname);
       codes = codes.filter((el) => {
-        console.log(el.player.fullname);
-        console.log(regex.test(el.player.fullname));
         return regex.test(el.player.fullname);
       });
     }
@@ -194,7 +192,6 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
         return regex.test(el.player.phone);
       });
     }
-    console.log(codes)
     res.json(codes);
   } catch (error) {
     console.error(error);
@@ -395,7 +392,7 @@ router.post("/genold", async (req: Request, res: Response) => {
 });
 
 /// gen chunk
-router.get("/generatecodes", async (req: Request, res: Response) => {
+router.post("/generatecodes", async (req: Request, res: Response) => {
   try {
     let date: any = new Date();
     date =
