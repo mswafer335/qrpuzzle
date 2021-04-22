@@ -233,16 +233,16 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
     let codes = await Prize.find(PRIZE_QUERY).populate("player");
     if (req.query.fullname) {
       // @ts-ignore:
-      const regex = new RegExp(req.query.fullname, "g");
+      const regex = new RegExp(req.query.fullname);
       codes = codes.filter((el) => {
-        el.player.fullname.match(regex);
+        return regex.test(el.player.fullname);
       });
     }
     if (req.query.phone) {
       // @ts-ignore:
-      const regex = new RegExp(req.query.phone, "g");
+      const regex = new RegExp(req.query.phone);
       codes = codes.filter((el) => {
-        el.player.phone.match(regex);
+        return regex.test(el.player.phone);
       });
     }
     res.json(codes);
