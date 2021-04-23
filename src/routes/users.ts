@@ -53,7 +53,7 @@ router.get("/find/all/ndfl", auth, async (req: Request, res: Response) => {
       prize_sum: { $gt: Number(req.query.gt) },
     };
     for (const key of keys) {
-      if (key != "gt") {
+      if (key !== "gt") {
         QUERY_OBJ[key] = req.query[key];
       }
     }
