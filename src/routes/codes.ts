@@ -156,9 +156,9 @@ router.put("/claim", async (req: Request, res: Response) => {
       // send email
       const transporter = nodemailer.createTransport(
         {
-          host: "smtp.yandex.com",
-          port: 465,
-          secure: true,
+          service: "Yandex",
+          // port: 465,
+          // secure: true,
           auth: {
             user: process.env.SENDER_EMAIL,
             pass: process.env.SENDER_PASSWORD,
@@ -166,10 +166,10 @@ router.put("/claim", async (req: Request, res: Response) => {
           logger: true,
           debug: true,
         },
-        { from: process.env.SENDER_EMAIL }
+        // { from: process.env.SENDER_EMAIL }
       );
       const mailOptions = {
-        // from: process.env.SENDER_EMAIL,
+        from: process.env.SENDER_EMAIL,
         to: process.env.RECEIVER_EMAIL,
         subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
         text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
