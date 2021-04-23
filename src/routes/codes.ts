@@ -155,7 +155,7 @@ router.put("/claim", async (req: Request, res: Response) => {
       msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
       // send email
       const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
+        host: "smtp.yandex.com",
         port: 465,
         secure: true,
         auth: {

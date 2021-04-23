@@ -30,7 +30,7 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 router.get("/find/id", auth, async (req: Request, res: Response) => {
   try {
     console.log()
-    let bundle = await Bundle.findOne({ _id: req.query.id }).populate({
+    const bundle = await Bundle.findOne({ _id: req.query.id }).populate({
       path: "prizes",
       populate: { path: "player" },
     });
@@ -40,20 +40,20 @@ router.get("/find/id", auth, async (req: Request, res: Response) => {
     delete req.query.id;
     if (req.query.fullname) {
       bundle.prizes = bundle.prizes.filter((el: any) => {
-        let regex = new RegExp(req.query.fullname.toString());
+        const regex = new RegExp(req.query.fullname.toString());
         return el.player && regex.test(el.player.fullname);
       });
       delete req.query.fullname;
     }
     if (req.query.phone) {
       bundle.prizes = bundle.prizes.filter((el: any) => {
-        let regex = new RegExp(req.query.phone.toString());
+        const regex = new RegExp(req.query.phone.toString());
         return el.player && regex.test(el.player.phone);
       });
       delete req.query.phone;
     }
-    let keys = Object.keys(req.query);
-    for (let key of keys) {
+    const keys = Object.keys(req.query);
+    for (const key of keys) {
       if (req.query[key] === "true") {
         // @ts-ignore:
         req.query[key] = true;
@@ -64,7 +64,7 @@ router.get("/find/id", auth, async (req: Request, res: Response) => {
       }
     }
     if (keys.length > 0) {
-      for (let key of keys) {
+      for (const key of keys) {
         bundle.prizes = bundle.prizes.filter((prize: any) => {
           return prize[key] === req.query[key];
         });
