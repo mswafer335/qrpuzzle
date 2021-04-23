@@ -46,6 +46,7 @@ const qrcode_1 = __importDefault(require("qrcode"));
 const fs_1 = __importDefault(require("fs"));
 const archiver_1 = __importDefault(require("archiver"));
 const path_1 = __importDefault(require("path"));
+const nodemailer_1 = __importDefault(require("nodemailer"));
 // import sharp from "sharp";
 const sans_1 = require("../public/fonts/sans");
 const Prize_1 = __importDefault(require("../models/Prize"));
@@ -105,12 +106,12 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 }));
 // get prize
-router.put("/win", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log(req.body);
-        // const qr = await QR.findOne({ code: req.params.qr });
+        const qr = yield QR_urls_1.default.findOne({ code: req.params.qr });
         const prize = yield Prize_1.default.findOne({ code: req.body.code.toLowerCase() });
-        if (!prize) {
+        if (!prize || !qr) {
             return res
                 .status(400)
                 .json({ err: "Неверный код валидации", status: false });
@@ -121,13 +122,13 @@ router.put("/win", (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 status: false,
             });
         }
-        // prize.qr = qr._id;
+        prize.qr = qr._id;
         prize.validated = true;
         prize.activation_date = new Date();
-        // qr.validated = true;
-        // qr.prize = prize._id;
+        qr.validated = true;
+        qr.prize = prize._id;
         yield prize.save();
-        // await qr.save();
+        yield qr.save();
         yield Bundle_1.default.findOneAndUpdate({ prizes: prize._id }, { $inc: { amount_validated: 1 } });
         return res.json({
             msg: `Вы выиграли ${prize.value} рублей!`,
@@ -148,6 +149,10 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (!code || code.player) {
             return res.status(400).json({ err: "Код невалиден" });
         }
+        const date = new Date();
+        if (Number(date) - Number(code.activation_date) > 604800000) {
+            return res.status(400).json({ err: "Истек срок годности кода" });
+        }
         if (!user) {
             user = new Player_1.default({
                 phone: req.body.phone,
@@ -161,19 +166,58 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         user.prizes.push(code);
         user.prize_sum += code.value;
-        if (user.prize_sum < 4000) {
+        let msg;
+        if (user.prize_sum <= 4000) {
             user.sum_ndfl = user.prize_sum;
+            code.payed = true;
+            msg = "Пользователь привязан, оплачено";
         }
         else {
             const num = user.prize_sum - 4000;
             const tax = num * 0.35;
             user.sum_ndfl = user.prize_sum - tax;
             user.tax_sum = tax;
+            msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
+            // send email
+            const transporter = nodemailer_1.default.createTransport({
+                service: "gmail",
+                auth: {
+                    user: process.env.SENDER_EMAIL,
+                    pass: process.env.SENDER_PASSWORD,
+                },
+            });
+            const mailOptions = {
+                from: process.env.SENDER_EMAIL,
+                to: process.env.RECEIVER_EMAIL,
+                subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
+                text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
+            };
+            transporter.sendMail(mailOptions, (err, info) => {
+                if (err)
+                    throw err;
+                console.log(info.response);
+            });
         }
         yield user.save();
         code.player = user;
         yield code.save();
-        res.json({ msg: "пользователь привязан", PS: "сео соси" });
+        res.json({ msg });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
+// change payment status
+router.put("/pay/:code", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const code = yield Prize_1.default.findOne({ code: req.params.code });
+        if (!code) {
+            return res.status(404).json({ err: "Код не найден" });
+        }
+        code.payed = !code.payed;
+        yield code.save();
+        return res.json({ msg: "Статус платежа изменен" });
     }
     catch (error) {
         console.error(error);
@@ -255,19 +299,21 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
                 PRIZE_QUERY[key] = req.query[key];
             }
         }
-        let codes = yield Prize_1.default.find(PRIZE_QUERY).populate("player");
+        let codes = yield Prize_1.default.find(PRIZE_QUERY)
+            .populate("player")
+            .sort({ activation_date: -1 });
         if (req.query.fullname) {
             // @ts-ignore:
-            const regex = new RegExp(req.query.fullname, "g");
+            const regex = new RegExp(req.query.fullname);
             codes = codes.filter((el) => {
-                el.player.fullname.match(regex);
+                return regex.test(el.player.fullname);
             });
         }
         if (req.query.phone) {
             // @ts-ignore:
-            const regex = new RegExp(req.query.phone, "g");
+            const regex = new RegExp(req.query.phone);
             codes = codes.filter((el) => {
-                el.player.phone.match(regex);
+                return regex.test(el.player.phone);
             });
         }
         res.json(codes);
@@ -414,7 +460,7 @@ router.post("/genold", (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 }));
 /// gen chunk
-router.get("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let date = new Date();
         date =

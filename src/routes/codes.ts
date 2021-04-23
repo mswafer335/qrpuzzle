@@ -125,6 +125,10 @@ router.put("/claim", async (req: Request, res: Response) => {
     if (!code || code.player) {
       return res.status(400).json({ err: "Код невалиден" });
     }
+    const date = new Date();
+    if (Number(date) - Number(code.activation_date) > 604800000) {
+      return res.status(400).json({ err: "Истек срок годности кода" });
+    }
     if (!user) {
       user = new Player({
         phone: req.body.phone,
@@ -150,14 +154,14 @@ router.put("/claim", async (req: Request, res: Response) => {
       user.tax_sum = tax;
       msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
       // send email
-      let transporter = nodemailer.createTransport({
+      const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
           user: process.env.SENDER_EMAIL,
           pass: process.env.SENDER_PASSWORD,
         },
       });
-      let mailOptions = {
+      const mailOptions = {
         from: process.env.SENDER_EMAIL,
         to: process.env.RECEIVER_EMAIL,
         subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
@@ -171,17 +175,17 @@ router.put("/claim", async (req: Request, res: Response) => {
     await user.save();
     code.player = user;
     await code.save();
-    res.json({ msg: msg });
+    res.json({ msg });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
   }
 });
 
-//change payment status
+// change payment status
 router.put("/pay/:code", async (req: Request, res: Response) => {
   try {
-    let code = await Prize.findOne({ code: req.params.code });
+    const code = await Prize.findOne({ code: req.params.code });
     if (!code) {
       return res.status(404).json({ err: "Код не найден" });
     }

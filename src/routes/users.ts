@@ -50,7 +50,7 @@ router.get("/find/all/ndfl", auth, async (req: Request, res: Response) => {
   try {
     const keys = Object.keys(req.query);
     const QUERY_OBJ: any = {
-      prize_sum: { $gt: Number(req.query.gt) },
+      prize_sum: { $gt: Number(req.query.gt ? req.query.gt : 4000) },
     };
     for (const key of keys) {
       if (key !== "gt") {
