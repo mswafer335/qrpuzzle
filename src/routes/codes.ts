@@ -191,14 +191,14 @@ router.put("/claim", async (req: Request, res: Response) => {
 });
 
 // change payment status
-router.put("/pay/:id", async (req: Request, res: Response) => {
+router.put("/pay/:id",auth, async (req: Request, res: Response) => {
   try {
     const user = await Player.findOne({ _id: req.params.id });
     if (!user) {
       return res.status(404).json({ err: "Код не найден" });
     }
     await Prize.updateMany({ _id: { $in: user.prizes } }, { payed: true });
-    return res.json({ msg: "Статус платежа изменен" });
+    return res.redirect(303,"/users/find/all/ndfl");
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
