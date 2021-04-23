@@ -155,7 +155,9 @@ router.put("/claim", async (req: Request, res: Response) => {
       msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
       // send email
       const transporter = nodemailer.createTransport({
-        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
           user: process.env.SENDER_EMAIL,
           pass: process.env.SENDER_PASSWORD,
@@ -167,6 +169,7 @@ router.put("/claim", async (req: Request, res: Response) => {
         subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
         text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
       };
+      console.log("pre send")
       transporter.sendMail(mailOptions, (err, info) => {
         if (err) throw err;
         console.log(info.response);
