@@ -154,6 +154,9 @@ router.put("/claim", async (req: Request, res: Response) => {
       user.tax_sum = tax;
       msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
       // send email
+      console.log(process.env.SENDER_EMAIL);
+      console.log(process.env.SENDER_PASSWORD);
+      console.log(process.env.RECEIVER_EMAIL);
       const transporter = nodemailer.createTransport(
         {
           service: "Yandex",
