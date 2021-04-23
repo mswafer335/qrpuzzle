@@ -152,36 +152,33 @@ router.put("/claim", async (req: Request, res: Response) => {
       const tax = num * 0.35;
       user.sum_ndfl = user.prize_sum - tax;
       user.tax_sum = tax;
-      msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
+      msg = "Пользователь привязан, уведомление о НДФЛ не отправлено";
       // send email
-      console.log(process.env.SENDER_EMAIL);
-      console.log(process.env.SENDER_PASSWORD);
-      console.log(process.env.RECEIVER_EMAIL);
-      const transporter = nodemailer.createTransport(
-        {
-          service: "Yandex",
-          // port: 465,
-          // secure: true,
-          auth: {
-            user: process.env.SENDER_EMAIL,
-            pass: process.env.SENDER_PASSWORD,
-          },
-          logger: true,
-          debug: true,
-        },
-        // { from: process.env.SENDER_EMAIL }
-      );
-      const mailOptions = {
-        from: process.env.SENDER_EMAIL,
-        to: process.env.RECEIVER_EMAIL,
-        subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
-        text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
-      };
-      console.log("pre send");
-      transporter.sendMail(mailOptions, (err, info) => {
-        if (err) throw err;
-        console.log(info.response);
-      });
+      // const transporter = nodemailer.createTransport(
+      //   {
+      //     service: "Yandex",
+      //     // port: 465,
+      //     // secure: true,
+      //     auth: {
+      //       user: process.env.SENDER_EMAIL,
+      //       pass: process.env.SENDER_PASSWORD,
+      //     },
+      //     logger: true,
+      //     debug: true,
+      //   },
+      //   // { from: process.env.SENDER_EMAIL }
+      // );
+      // const mailOptions = {
+      //   from: process.env.SENDER_EMAIL,
+      //   to: process.env.RECEIVER_EMAIL,
+      //   subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
+      //   text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
+      // };
+      // console.log("pre send");
+      // transporter.sendMail(mailOptions, (err, info) => {
+      //   if (err) throw err;
+      //   console.log(info.response);
+      // });
     }
     await user.save();
     code.player = user;
