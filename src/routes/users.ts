@@ -50,10 +50,12 @@ router.get("/find/all/ndfl", auth, async (req: Request, res: Response) => {
   try {
     const keys = Object.keys(req.query);
     const QUERY_OBJ: any = {
-      prize_sum: { $gt: 4000 },
+      prize_sum: { $gt: Number(req.query.gt) },
     };
     for (const key of keys) {
-      QUERY_OBJ[key] = req.query[key];
+      if (key != "gt") {
+        QUERY_OBJ[key] = req.query[key];
+      }
     }
     const users = await Player.find(QUERY_OBJ).populate("prizes");
     res.json(users);
