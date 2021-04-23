@@ -76,7 +76,7 @@ router.get("/find/all/ndfl", auth_1.default, (req, res) => __awaiter(void 0, voi
     try {
         const keys = Object.keys(req.query);
         const QUERY_OBJ = {
-            prize_sum: { $gt: Number(req.query.gt) },
+            prize_sum: { $gt: Number(req.query.gt ? req.query.gt : 4000) },
         };
         for (const key of keys) {
             if (key !== "gt") {

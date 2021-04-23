@@ -30,34 +30,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
-const db_1 = require("./middleware/db");
-const codes_1 = __importDefault(require("./routes/codes"));
-const bundles_1 = __importDefault(require("./routes/bundles"));
-const users_1 = __importDefault(require("./routes/users"));
-const management_1 = __importDefault(require("./routes/management"));
 const dotenv = __importStar(require("dotenv"));
-const newStat_1 = __importDefault(require("./middleware/newStat"));
+const QRStat_1 = __importDefault(require("../models/QRStat"));
 dotenv.config();
-const app = express_1.default();
-db_1.connectDB();
-app.use(cors_1.default());
-app.use(express_1.default.json());
-app.use(express_1.default.static("public"));
-app.use("/archive", express_1.default.static(__dirname + "/archive"));
-app.get("/", (req, res) => res.send("no hack plz"));
-app.use("/codes", codes_1.default);
-app.use("/bundles", bundles_1.default);
-app.use("/users", users_1.default);
-app.use("/admin", management_1.default);
-const PORT = process.env.PORT || 1370;
-app.listen(PORT, () => console.log(`Server started on ${PORT}`));
-const GovnaKusok = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield newStat_1.default();
-    console.log("huy");
-    setTimeout(GovnaKusok, 5000);
+module.exports = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const d = new Date();
+        let stat = yield QRStat_1.default.findOne({
+            day: d.getDate(),
+            month: d.getMonth() + 1,
+            year: d.getFullYear(),
+        });
+        if (!stat) {
+            stat = new QRStat_1.default({
+                date: d,
+                day: d.getDate(),
+                month: d.getMonth() + 1,
+                year: d.getFullYear(),
+            });
+            yield stat.save();
+        }
+        return stat._id;
+    }
+    catch (error) {
+        console.error(error.message);
+        process.exit(1);
+    }
 });
-GovnaKusok();
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=newStat.js.map

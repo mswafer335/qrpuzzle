@@ -183,14 +183,13 @@ router.put("/claim", async (req: Request, res: Response) => {
 });
 
 // change payment status
-router.put("/pay/:code", async (req: Request, res: Response) => {
+router.put("/pay/:id", async (req: Request, res: Response) => {
   try {
-    const code = await Prize.findOne({ code: req.params.code });
-    if (!code) {
+    const user = await Player.findOne({ code: req.params.id });
+    if (!user) {
       return res.status(404).json({ err: "Код не найден" });
     }
-    code.payed = !code.payed;
-    await code.save();
+    await Prize.updateMany({ _id: { $in: user.prizes } }, { payed: true });
     return res.json({ msg: "Статус платежа изменен" });
   } catch (error) {
     console.error(error);
@@ -225,14 +224,14 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
       // @ts-ignore:
       const regex = new RegExp(req.query.fullname);
       codes = codes.filter((el) => {
-        return regex.test(el.player.fullname);
+        return el.player && regex.test(el.player.fullname);
       });
     }
     if (req.query.phone) {
       // @ts-ignore:
       const regex = new RegExp(req.query.phone);
       codes = codes.filter((el) => {
-        return regex.test(el.player.phone);
+        return el.player && regex.test(el.player.phone);
       });
     }
     res.json(codes);

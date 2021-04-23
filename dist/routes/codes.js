@@ -251,14 +251,14 @@ router.get("/find/claimed", auth_1.default, (req, res) => __awaiter(void 0, void
             // @ts-ignore:
             const regex = new RegExp(req.query.fullname);
             codes = codes.filter((el) => {
-                return regex.test(el.player.fullname);
+                return el.player && regex.test(el.player.fullname);
             });
         }
         if (req.query.phone) {
             // @ts-ignore:
             const regex = new RegExp(req.query.phone);
             codes = codes.filter((el) => {
-                return regex.test(el.player.phone);
+                return el.player && regex.test(el.player.phone);
             });
         }
         res.json(codes);
@@ -306,14 +306,14 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
             // @ts-ignore:
             const regex = new RegExp(req.query.fullname);
             codes = codes.filter((el) => {
-                return regex.test(el.player.fullname);
+                return el.player && regex.test(el.player.fullname);
             });
         }
         if (req.query.phone) {
             // @ts-ignore:
             const regex = new RegExp(req.query.phone);
             codes = codes.filter((el) => {
-                return regex.test(el.player.phone);
+                return el.player && regex.test(el.player.phone);
             });
         }
         res.json(codes);

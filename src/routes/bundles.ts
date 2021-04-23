@@ -27,14 +27,47 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 });
 
 // get single bundle
-router.get("/find/id/:id", auth, async (req: Request, res: Response) => {
+router.get("/find/id", auth, async (req: Request, res: Response) => {
   try {
-    const bundle = await Bundle.findOne({ _id: req.params.id }).populate({
+    let bundle = await Bundle.findOne({ _id: req.query.id }).populate({
       path: "prizes",
       populate: { path: "player" },
     });
     if (!bundle) {
       return res.status(404).json({ err: "Не найдено" });
+    }
+    delete req.query.id;
+    if (req.query.fullname) {
+      bundle.prizes = bundle.prizes.filter((el: any) => {
+        let regex = new RegExp(req.query.fullname.toString());
+        return regex.test(el.player.fullname);
+      });
+      delete req.query.fullname;
+    }
+    if (req.query.phone) {
+      bundle.prizes = bundle.prizes.filter((el: any) => {
+        let regex = new RegExp(req.query.phone.toString());
+        return regex.test(el.player.phone);
+      });
+      delete req.query.phone;
+    }
+    let keys = Object.keys(req.query);
+    for (let key of keys) {
+      if (req.query[key] === "true") {
+        // @ts-ignore:
+        req.query[key] = true;
+      }
+      if (req.query[key] === "false") {
+        // @ts-ignore:
+        req.query[key] = false;
+      }
+    }
+    if (keys.length > 0) {
+      for (let key of keys) {
+        bundle.prizes = bundle.prizes.filter((prize: any) => {
+          return prize[key] === req.query[key];
+        });
+      }
     }
     return res.json(bundle);
   } catch (error) {

@@ -6,6 +6,7 @@ import bundle_route from "./routes/bundles";
 import user_route from "./routes/users";
 import admin_route from "./routes/management";
 import * as dotenv from "dotenv";
+import newStat from "./middleware/newStat";
 dotenv.config();
 const app: Application = express();
 
@@ -24,3 +25,10 @@ app.use("/admin", admin_route);
 
 const PORT = process.env.PORT || 1370;
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
+
+const GovnaKusok = async () => {
+  await newStat();
+  console.log("huy");
+  setTimeout(GovnaKusok, 10800000);
+};
+GovnaKusok();
