@@ -185,7 +185,7 @@ router.put("/claim", async (req: Request, res: Response) => {
 // change payment status
 router.put("/pay/:id", async (req: Request, res: Response) => {
   try {
-    const user = await Player.findOne({ code: req.params.id });
+    const user = await Player.findOne({ _id: req.params.id });
     if (!user) {
       return res.status(404).json({ err: "Код не найден" });
     }
