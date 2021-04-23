@@ -15,6 +15,7 @@ import QRCode from "qrcode";
 import fs from "fs";
 import archiver from "archiver";
 import path from "path";
+import nodemailer from "nodemailer";
 // import sharp from "sharp";
 import { font } from "../public/fonts/sans";
 import Prize, { IPrize } from "../models/Prize";
@@ -78,12 +79,12 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
 });
 
 // get prize
-router.put("/win", async (req: Request, res: Response) => {
+router.put("/win/:qr", async (req: Request, res: Response) => {
   try {
     console.log(req.body);
-    // const qr = await QR.findOne({ code: req.params.qr });
+    const qr = await QR.findOne({ code: req.params.qr });
     const prize = await Prize.findOne({ code: req.body.code.toLowerCase() });
-    if (!prize) {
+    if (!prize || !qr) {
       return res
         .status(400)
         .json({ err: "Неверный код валидации", status: false });
@@ -94,13 +95,13 @@ router.put("/win", async (req: Request, res: Response) => {
         status: false,
       });
     }
-    // prize.qr = qr._id;
+    prize.qr = qr._id;
     prize.validated = true;
     prize.activation_date = new Date();
-    // qr.validated = true;
-    // qr.prize = prize._id;
+    qr.validated = true;
+    qr.prize = prize._id;
     await prize.save();
-    // await qr.save();
+    await qr.save();
     await Bundle.findOneAndUpdate(
       { prizes: prize._id },
       { $inc: { amount_validated: 1 } }
@@ -137,18 +138,56 @@ router.put("/claim", async (req: Request, res: Response) => {
     }
     user.prizes.push(code);
     user.prize_sum += code.value;
-    if (user.prize_sum < 4000) {
+    let msg: string;
+    if (user.prize_sum <= 4000) {
       user.sum_ndfl = user.prize_sum;
+      code.payed = true;
+      msg = "Пользователь привязан, оплачено";
     } else {
       const num = user.prize_sum - 4000;
       const tax = num * 0.35;
       user.sum_ndfl = user.prize_sum - tax;
       user.tax_sum = tax;
+      msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
+      // send email
+      let transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.SENDER_EMAIL,
+          pass: process.env.SENDER_PASSWORD,
+        },
+      });
+      let mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: process.env.RECEIVER_EMAIL,
+        subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
+        text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
+      };
+      transporter.sendMail(mailOptions, (err, info) => {
+        if (err) throw err;
+        console.log(info.response);
+      });
     }
     await user.save();
     code.player = user;
     await code.save();
-    res.json({ msg: "пользователь привязан", PS: "сео соси" });
+    res.json({ msg: msg });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
+
+//change payment status
+router.put("/pay/:code", async (req: Request, res: Response) => {
+  try {
+    let code = await Prize.findOne({ code: req.params.code });
+    if (!code) {
+      return res.status(404).json({ err: "Код не найден" });
+    }
+    code.payed = !code.payed;
+    await code.save();
+    return res.json({ msg: "Статус платежа изменен" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
@@ -230,7 +269,9 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
         PRIZE_QUERY[key] = req.query[key];
       }
     }
-    let codes = await Prize.find(PRIZE_QUERY).populate("player");
+    let codes = await Prize.find(PRIZE_QUERY)
+      .populate("player")
+      .sort({ activation_date: -1 });
     if (req.query.fullname) {
       // @ts-ignore:
       const regex = new RegExp(req.query.fullname);
