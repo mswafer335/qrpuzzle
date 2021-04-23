@@ -29,6 +29,7 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 // get single bundle
 router.get("/find/id", auth, async (req: Request, res: Response) => {
   try {
+    console.log()
     let bundle = await Bundle.findOne({ _id: req.query.id }).populate({
       path: "prizes",
       populate: { path: "player" },
@@ -40,14 +41,14 @@ router.get("/find/id", auth, async (req: Request, res: Response) => {
     if (req.query.fullname) {
       bundle.prizes = bundle.prizes.filter((el: any) => {
         let regex = new RegExp(req.query.fullname.toString());
-        return regex.test(el.player.fullname);
+        return el.player && regex.test(el.player.fullname);
       });
       delete req.query.fullname;
     }
     if (req.query.phone) {
       bundle.prizes = bundle.prizes.filter((el: any) => {
         let regex = new RegExp(req.query.phone.toString());
-        return regex.test(el.player.phone);
+        return el.player && regex.test(el.player.phone);
       });
       delete req.query.phone;
     }
