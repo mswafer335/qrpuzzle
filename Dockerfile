@@ -20,6 +20,6 @@ COPY src /app/src
 RUN npm install
 RUN npm run build
 
-EXPOSE 1370
+EXPOSE 1370 1370 465 465
 
 CMD [ "node", "./dist/index.js" ]

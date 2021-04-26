@@ -6,6 +6,7 @@ services:
     build: .
     ports:
       - '1370:1370'
+      - '465:465'
     volumes:
       - archive:/app/dist/public/archive
       - pdf:/app/dist/public/pdf

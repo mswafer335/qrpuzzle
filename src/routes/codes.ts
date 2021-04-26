@@ -66,9 +66,9 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
         .status(404)
         .json({ err: "Указанный QR код не найден", approve: false });
     }
-    if (qr.validated === true) {
-      return res.status(400).json({ err: "Этот QR код уже был использован" });
-    }
+    // if (qr.validated === true) {
+    //   return res.status(400).json({ err: "Этот QR код уже был использован" });
+    // }
     return res
       .status(200)
       .json({ msg: "Введите валидационный код", approve: true });
@@ -154,31 +154,31 @@ router.put("/claim", async (req: Request, res: Response) => {
       user.tax_sum = tax;
       msg = "Пользователь привязан, уведомление о НДФЛ не отправлено";
       // send email
-      // const transporter = nodemailer.createTransport(
-      //   {
-      //     service: "Yandex",
-      //     // port: 465,
-      //     // secure: true,
-      //     auth: {
-      //       user: process.env.SENDER_EMAIL,
-      //       pass: process.env.SENDER_PASSWORD,
-      //     },
-      //     logger: true,
-      //     debug: true,
-      //   },
-      //   // { from: process.env.SENDER_EMAIL }
-      // );
-      // const mailOptions = {
-      //   from: process.env.SENDER_EMAIL,
-      //   to: process.env.RECEIVER_EMAIL,
-      //   subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
-      //   text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
-      // };
-      // console.log("pre send");
-      // transporter.sendMail(mailOptions, (err, info) => {
-      //   if (err) throw err;
-      //   console.log(info.response);
-      // });
+      const transporter = nodemailer.createTransport(
+        {
+          host: "smpt.yandex.ru",
+          port: 465,
+          secure: true,
+          auth: {
+            user: process.env.SENDER_EMAIL,
+            pass: process.env.SENDER_PASSWORD,
+          },
+          logger: true,
+          debug: true,
+        },
+        { from: process.env.SENDER_EMAIL }
+      );
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: process.env.RECEIVER_EMAIL,
+        subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
+        text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
+      };
+      console.log("pre send");
+      transporter.sendMail(mailOptions, (err, info) => {
+        if (err) throw err;
+        console.log(info.response);
+      });
     }
     await user.save();
     code.player = user;
@@ -486,7 +486,7 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
         const code4 = Date.now().toString(36).substr(4).toLowerCase();
         const CodeFinal = code1 + code2 + code3 + code4;
         const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
-        const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
+        const QR_CODE = makeid(7) + Date.now().toString(36).toUpperCase();
         const QRinput = process.env.win_url + QR_CODE;
 
         await QRCode.toDataURL(QRinput, {
