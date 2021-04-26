@@ -156,9 +156,9 @@ router.put("/claim", async (req: Request, res: Response) => {
       // send email
       const transporter = nodemailer.createTransport(
         {
-          host: "smpt.yandex.ru",
-          port: 465,
-          secure: true,
+          service: "Yandex",
+          // port: 465,
+          // secure: true,
           auth: {
             user: process.env.SENDER_EMAIL,
             pass: process.env.SENDER_PASSWORD,
@@ -166,7 +166,7 @@ router.put("/claim", async (req: Request, res: Response) => {
           logger: true,
           debug: true,
         },
-        { from: process.env.SENDER_EMAIL }
+        // { from: process.env.SENDER_EMAIL }
       );
       const mailOptions = {
         from: process.env.SENDER_EMAIL,
