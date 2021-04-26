@@ -57,7 +57,7 @@ app.listen(PORT, () => console.log(`Server started on ${PORT}`));
 const GovnaKusok = () => __awaiter(void 0, void 0, void 0, function* () {
     yield newStat_1.default();
     console.log("huy");
-    setTimeout(GovnaKusok, 5000);
+    setTimeout(GovnaKusok, 10800000);
 });
 GovnaKusok();
 //# sourceMappingURL=index.js.map

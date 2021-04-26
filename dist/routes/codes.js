@@ -93,9 +93,9 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 .status(404)
                 .json({ err: "Указанный QR код не найден", approve: false });
         }
-        if (qr.validated === true) {
-            return res.status(400).json({ err: "Этот QR код уже был использован" });
-        }
+        // if (qr.validated === true) {
+        //   return res.status(400).json({ err: "Этот QR код уже был использован" });
+        // }
         return res
             .status(200)
             .json({ msg: "Введите валидационный код", approve: true });
@@ -177,14 +177,18 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             const tax = num * 0.35;
             user.sum_ndfl = user.prize_sum - tax;
             user.tax_sum = tax;
-            msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
+            msg = "Пользователь привязан, уведомление о НДФЛ не отправлено";
             // send email
             const transporter = nodemailer_1.default.createTransport({
-                service: "gmail",
+                service: "Yandex",
+                // port: 465,
+                // secure: true,
                 auth: {
                     user: process.env.SENDER_EMAIL,
                     pass: process.env.SENDER_PASSWORD,
                 },
+                logger: true,
+                debug: true,
             });
             const mailOptions = {
                 from: process.env.SENDER_EMAIL,
@@ -192,6 +196,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
                 text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
             };
+            console.log("pre send");
             transporter.sendMail(mailOptions, (err, info) => {
                 if (err)
                     throw err;
@@ -209,15 +214,14 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 }));
 // change payment status
-router.put("/pay/:code", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put("/pay/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const code = yield Prize_1.default.findOne({ code: req.params.code });
-        if (!code) {
+        const user = yield Player_1.default.findOne({ _id: req.params.id });
+        if (!user) {
             return res.status(404).json({ err: "Код не найден" });
         }
-        code.payed = !code.payed;
-        yield code.save();
-        return res.json({ msg: "Статус платежа изменен" });
+        yield Prize_1.default.updateMany({ _id: { $in: user.prizes } }, { payed: true });
+        return res.redirect(303, "/users/find/all/ndfl");
     }
     catch (error) {
         console.error(error);
@@ -501,7 +505,7 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 const code4 = Date.now().toString(36).substr(4).toLowerCase();
                 const CodeFinal = code1 + code2 + code3 + code4;
                 const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
-                const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
+                const QR_CODE = makeid(7) + Date.now().toString(36).toUpperCase();
                 const QRinput = process.env.win_url + QR_CODE;
                 yield qrcode_1.default.toDataURL(QRinput, {
                     errorCorrectionLevel: "H",
