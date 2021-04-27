@@ -38,6 +38,7 @@ const QRStatSchema = new Schema({
   },
   newUsers: {
     type: Number,
+    default: 0,
   },
 });
 
