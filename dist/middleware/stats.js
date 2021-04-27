@@ -37,6 +37,7 @@ dotenv.config();
 module.exports = (newInfoObject) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield QRStat_1.default.findOneAndUpdate({ _id: yield newStat_1.default() }, newInfoObject);
+        return;
     }
     catch (error) {
         console.error(error.message);

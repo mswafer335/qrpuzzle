@@ -7,6 +7,8 @@ export interface IStat extends Document {
   month: number;
   year: number;
   PrizesActivated: number;
+  PrizesClaimed: number;
+  WinningsClaimed: number;
   TotalWinnings: number;
   newUsers: number;
   //   url: string;
@@ -26,9 +28,13 @@ const QRStatSchema = new Schema({
   },
   PrizesActivated: {
     type: Number,
+    default: 0,
   },
+  PrizesClaimed: { type: Number, default: 0 },
+  WinningsClaimed: { type: Number, default: 0 },
   TotalWinnings: {
     type: Number,
+    default: 0,
   },
   newUsers: {
     type: Number,

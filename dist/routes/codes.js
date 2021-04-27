@@ -40,7 +40,6 @@ dotenv.config({ path: __dirname + "/.env" });
 const auth_1 = __importDefault(require("../middleware/auth"));
 const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
-// import Prize from "../models/Prize";
 const jspdf_1 = require("jspdf");
 const qrcode_1 = __importDefault(require("qrcode"));
 const fs_1 = __importDefault(require("fs"));
@@ -53,6 +52,7 @@ const Prize_1 = __importDefault(require("../models/Prize"));
 const QR_urls_1 = __importDefault(require("../models/QR-urls"));
 const Bundle_1 = __importDefault(require("../models/Bundle"));
 const Player_1 = __importDefault(require("../models/Player"));
+const stats_1 = __importDefault(require("../middleware/stats"));
 function makeid(length) {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -62,28 +62,16 @@ function makeid(length) {
     }
     return result;
 }
-// test
-router.post("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        // const huy = await axios.post(
-        //   `https://edge.qiwi.com/sinap/providers/${req.body.receiver}/onlineCommission`,
-        //   {
-        //     account: "79788287717",
-        //     paymentMethod: { type: "Account", accountId: "643" },
-        //     purchaseTotals: { total: { amount: req.body.sum, currency: "643" } },
-        //   }
-        // );
-        // res.json(huy.data);
-        res.json(yield asyncWallet.checkOnlineCommission(req.body.receiver, {
-            account: "",
-            amount: req.body.sum,
-        }));
-    }
-    catch (error) {
-        console.error(error);
-        return res.status(500).json({ err: "server error" });
-    }
-}));
+const transporter = nodemailer_1.default.createTransport({
+    service: "Yandex",
+    port: 465,
+    auth: {
+        user: process.env.SENDER_EMAIL,
+        pass: process.env.SENDER_PASSWORD,
+    },
+    logger: true,
+    debug: true,
+});
 // check QR
 router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -122,14 +110,19 @@ router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function*
                 status: false,
             });
         }
-        prize.qr = qr._id;
-        prize.validated = true;
-        prize.activation_date = new Date();
+        // prize.qr = qr._id;
+        // prize.validated = true;
+        // prize.activation_date = new Date();
         qr.validated = true;
         qr.prize = prize._id;
         yield prize.save();
         yield qr.save();
+        yield Prize_1.default.findOneAndUpdate({ code: req.body.code.toLowerCase() }, { qr: qr._id, validated: true, activation_date: new Date() });
         yield Bundle_1.default.findOneAndUpdate({ prizes: prize._id }, { $inc: { amount_validated: 1 } });
+        yield stats_1.default({
+            PrizesActivated: { $inc: 1 },
+            TotalWinnings: { $inc: prize.value },
+        });
         return res.json({
             msg: `Вы выиграли ${prize.value} рублей!`,
             value: prize.value,
@@ -163,6 +156,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 prizes: [],
                 prize_sum: 0,
             });
+            yield stats_1.default({ newUsers: { $inc: 1 } });
         }
         user.prizes.push(code);
         user.prize_sum += code.value;
@@ -171,6 +165,10 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             user.sum_ndfl = user.prize_sum;
             code.payed = true;
             msg = "Пользователь привязан, оплачено";
+            yield stats_1.default({
+                PrizesClaimed: { $inc: 1 },
+                WinningsClaimed: { $inc: code.value },
+            });
         }
         else {
             const num = user.prize_sum - 4000;
@@ -179,17 +177,6 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             user.tax_sum = tax;
             msg = "Пользователь привязан, уведомление о НДФЛ не отправлено";
             // send email
-            const transporter = nodemailer_1.default.createTransport({
-                service: "Yandex",
-                // port: 465,
-                // secure: true,
-                auth: {
-                    user: process.env.SENDER_EMAIL,
-                    pass: process.env.SENDER_PASSWORD,
-                },
-                logger: true,
-                debug: true,
-            });
             const mailOptions = {
                 from: process.env.SENDER_EMAIL,
                 to: process.env.RECEIVER_EMAIL,
@@ -221,7 +208,7 @@ router.put("/pay/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, v
             return res.status(404).json({ err: "Код не найден" });
         }
         yield Prize_1.default.updateMany({ _id: { $in: user.prizes } }, { payed: true });
-        return res.redirect(303, "/users/find/all/ndfl");
+        res.redirect(303, "/users/find/all/ndfl");
     }
     catch (error) {
         console.error(error);

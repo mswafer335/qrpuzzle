@@ -14,9 +14,13 @@ const QRStatSchema = new mongoose_1.Schema({
     },
     PrizesActivated: {
         type: Number,
+        default: 0,
     },
+    PrizesClaimed: { type: Number, default: 0 },
+    WinningsClaimed: { type: Number, default: 0 },
     TotalWinnings: {
         type: Number,
+        default: 0,
     },
     newUsers: {
         type: Number,

@@ -12,6 +12,8 @@ import QR, { IQR } from "../models/QR-urls";
 import Bundle from "../models/Bundle";
 import Player from "../models/Player";
 import Admin from "../models/Admin";
+import auth from "../middleware/auth";
+import QRStat from "../models/QRStat";
 
 // new admin
 router.post("/register", async (req: Request, res: Response) => {
@@ -88,4 +90,79 @@ router.post("/auth", async (req: Request, res: Response) => {
   }
 });
 
+// get stats for 1 day
+router.get("/stats/oneday", auth, async (req, res) => {
+  try {
+    const query = {
+      day: Number(req.query.day),
+      month: Number(req.query.month),
+      year: Number(req.query.year),
+    };
+    const stat = await QRStat.findOne(query);
+    return res.json(stat);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
+
+// get all stats by weeks
+// get stats for last week
+router.get("/get/stats/week", async (req, res) => {
+  try {
+    const StatQuery = await QRStat.find();
+    const arr = [];
+    const func = (stats: any) => {
+      const fArr = [];
+      while (fArr.length < 7 && stats.length > 0) {
+        // if (stats.length >= 1) {
+          fArr.push(stats.pop());
+        // } else {
+        //   break;
+        // }
+      }
+      const week = {
+        PrizesClaimed: 0,
+        PrizesActivated: 0,
+        WinningsClaimed: 0,
+        TotalWinnings: 0,
+        newUsers: 0,
+        date: fArr[fArr.length - 1].date,
+      };
+      for (const el of fArr) {
+        week.PrizesClaimed += el.PrizesClaimed;
+        week.PrizesActivated += el.PrizesActivated;
+        week.WinningsClaimed += el.WinningsClaimed;
+        week.TotalWinnings += el.TotalWinnings;
+        week.newUsers += el.newUsers;
+      }
+      return week;
+    };
+    while (StatQuery.length >= 1) {
+      arr.push(func(StatQuery));
+    }
+    const bundles = await Bundle.find();
+    let totalCodes: number = 0;
+    let totalSum: number = 0;
+    let totalNonValidated: number = 0;
+    let totalNonValidatedSum: number = 0;
+    for (const bundle of bundles) {
+      totalCodes += bundle.amount;
+      totalSum += bundle.amount * bundle.value;
+      totalNonValidated += bundle.amount - bundle.amount_validated;
+      totalNonValidatedSum +=
+        (bundle.amount - bundle.amount_validated) * bundle.value;
+    }
+    res.json({
+      stats: arr.reverse(),
+      totalCodes,
+      totalSum,
+      totalNonValidated,
+      totalNonValidatedSum,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
 export default router;

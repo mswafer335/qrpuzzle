@@ -9,7 +9,6 @@ import auth from "../middleware/auth";
 const callbackWallet = new callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new asyncApi(process.env.QIWI_TOKEN);
 import axios from "axios";
-// import Prize from "../models/Prize";
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
 import fs from "fs";
@@ -22,6 +21,7 @@ import Prize, { IPrize } from "../models/Prize";
 import QR, { IQR } from "../models/QR-urls";
 import Bundle from "../models/Bundle";
 import Player from "../models/Player";
+import stat from "../middleware/stats";
 
 function makeid(length: number) {
   let result = "";
@@ -32,29 +32,15 @@ function makeid(length: number) {
   }
   return result;
 }
-
-// test
-router.post("/test", async (req, res) => {
-  try {
-    // const huy = await axios.post(
-    //   `https://edge.qiwi.com/sinap/providers/${req.body.receiver}/onlineCommission`,
-    //   {
-    //     account: "79788287717",
-    //     paymentMethod: { type: "Account", accountId: "643" },
-    //     purchaseTotals: { total: { amount: req.body.sum, currency: "643" } },
-    //   }
-    // );
-    // res.json(huy.data);
-    res.json(
-      await asyncWallet.checkOnlineCommission(req.body.receiver, {
-        account: "",
-        amount: req.body.sum,
-      })
-    );
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ err: "server error" });
-  }
+const transporter = nodemailer.createTransport({
+  service: "Yandex",
+  port: 465,
+  auth: {
+    user: process.env.SENDER_EMAIL,
+    pass: process.env.SENDER_PASSWORD,
+  },
+  logger: true,
+  debug: true,
 });
 
 // check QR
@@ -95,17 +81,25 @@ router.put("/win/:qr", async (req: Request, res: Response) => {
         status: false,
       });
     }
-    prize.qr = qr._id;
-    prize.validated = true;
-    prize.activation_date = new Date();
+    // prize.qr = qr._id;
+    // prize.validated = true;
+    // prize.activation_date = new Date();
     qr.validated = true;
     qr.prize = prize._id;
     await prize.save();
     await qr.save();
+    await Prize.findOneAndUpdate(
+      { code: req.body.code.toLowerCase() },
+      { qr: qr._id, validated: true, activation_date: new Date() }
+    );
     await Bundle.findOneAndUpdate(
       { prizes: prize._id },
       { $inc: { amount_validated: 1 } }
     );
+    await stat({
+      PrizesActivated: { $inc: 1 },
+      TotalWinnings: { $inc: prize.value },
+    });
     return res.json({
       msg: `Вы выиграли ${prize.value} рублей!`,
       value: prize.value,
@@ -139,6 +133,7 @@ router.put("/claim", async (req: Request, res: Response) => {
         prizes: [],
         prize_sum: 0,
       });
+      await stat({ newUsers: { $inc: 1 } });
     }
     user.prizes.push(code);
     user.prize_sum += code.value;
@@ -147,6 +142,10 @@ router.put("/claim", async (req: Request, res: Response) => {
       user.sum_ndfl = user.prize_sum;
       code.payed = true;
       msg = "Пользователь привязан, оплачено";
+      await stat({
+        PrizesClaimed: { $inc: 1 },
+        WinningsClaimed: { $inc: code.value },
+      });
     } else {
       const num = user.prize_sum - 4000;
       const tax = num * 0.35;
@@ -154,20 +153,6 @@ router.put("/claim", async (req: Request, res: Response) => {
       user.tax_sum = tax;
       msg = "Пользователь привязан, уведомление о НДФЛ не отправлено";
       // send email
-      const transporter = nodemailer.createTransport(
-        {
-          service: "Yandex",
-          port: 465,
-          // secure: true,
-          auth: {
-            user: process.env.SENDER_EMAIL,
-            pass: process.env.SENDER_PASSWORD,
-          },
-          logger: true,
-          debug: true,
-        },
-        // { from: process.env.SENDER_EMAIL }
-      );
       const mailOptions = {
         from: process.env.SENDER_EMAIL,
         to: process.env.RECEIVER_EMAIL,
@@ -191,14 +176,14 @@ router.put("/claim", async (req: Request, res: Response) => {
 });
 
 // change payment status
-router.put("/pay/:id",auth, async (req: Request, res: Response) => {
+router.put("/pay/:id", auth, async (req: Request, res: Response) => {
   try {
     const user = await Player.findOne({ _id: req.params.id });
     if (!user) {
       return res.status(404).json({ err: "Код не найден" });
     }
     await Prize.updateMany({ _id: { $in: user.prizes } }, { payed: true });
-    return res.redirect(303,"/users/find/all/ndfl");
+    res.redirect(303, "/users/find/all/ndfl");
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });

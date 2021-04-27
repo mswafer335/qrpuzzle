@@ -37,7 +37,10 @@ const dotenv = __importStar(require("dotenv"));
 const bcrypt = __importStar(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 dotenv.config({ path: __dirname + "/.env" });
+const Bundle_1 = __importDefault(require("../models/Bundle"));
 const Admin_1 = __importDefault(require("../models/Admin"));
+const auth_1 = __importDefault(require("../middleware/auth"));
+const QRStat_1 = __importDefault(require("../models/QRStat"));
 // new admin
 router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -98,6 +101,82 @@ router.post("/auth", (req, res) => __awaiter(void 0, void 0, void 0, function* (
     catch (err) {
         console.error(err.message);
         res.status(500).json({ err: "server error" });
+    }
+}));
+// get stats for 1 day
+router.get("/stats/oneday", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const query = {
+            day: Number(req.query.day),
+            month: Number(req.query.month),
+            year: Number(req.query.year),
+        };
+        const stat = yield QRStat_1.default.findOne(query);
+        return res.json(stat);
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
+// get all stats by weeks
+// get stats for last week
+router.get("/get/stats/week", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const StatQuery = yield QRStat_1.default.find();
+        const arr = [];
+        const func = (stats) => {
+            const fArr = [];
+            while (fArr.length < 7 && stats.length > 0) {
+                // if (stats.length >= 1) {
+                fArr.push(stats.pop());
+                // } else {
+                //   break;
+                // }
+            }
+            const week = {
+                PrizesClaimed: 0,
+                PrizesActivated: 0,
+                WinningsClaimed: 0,
+                TotalWinnings: 0,
+                newUsers: 0,
+                date: fArr[fArr.length - 1].date,
+            };
+            for (const el of fArr) {
+                week.PrizesClaimed += el.PrizesClaimed;
+                week.PrizesActivated += el.PrizesActivated;
+                week.WinningsClaimed += el.WinningsClaimed;
+                week.TotalWinnings += el.TotalWinnings;
+                week.newUsers += el.newUsers;
+            }
+            return week;
+        };
+        while (StatQuery.length >= 1) {
+            arr.push(func(StatQuery));
+        }
+        const bundles = yield Bundle_1.default.find();
+        let totalCodes = 0;
+        let totalSum = 0;
+        let totalNonValidated = 0;
+        let totalNonValidatedSum = 0;
+        for (const bundle of bundles) {
+            totalCodes += bundle.amount;
+            totalSum += bundle.amount * bundle.value;
+            totalNonValidated += bundle.amount - bundle.amount_validated;
+            totalNonValidatedSum +=
+                (bundle.amount - bundle.amount_validated) * bundle.value;
+        }
+        res.json({
+            stats: arr.reverse(),
+            totalCodes,
+            totalSum,
+            totalNonValidated,
+            totalNonValidatedSum,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
     }
 }));
 exports.default = router;

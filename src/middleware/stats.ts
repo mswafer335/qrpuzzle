@@ -6,6 +6,7 @@ dotenv.config();
 export = async (newInfoObject: object) => {
   try {
     await QRStat.findOneAndUpdate({ _id: await newStat() }, newInfoObject);
+    return
   } catch (error) {
     console.error(error.message);
     process.exit(1);
