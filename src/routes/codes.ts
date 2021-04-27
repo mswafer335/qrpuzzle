@@ -46,15 +46,22 @@ const transporter = nodemailer.createTransport({
 // check QR
 router.get("/qr/:qr", async (req: Request, res: Response) => {
   try {
-    const qr = await QR.findOne({ code: req.params.qr });
+    const qr = await QR.findOne({ code: req.params.qr }).populate("prize");
     if (!qr) {
       return res
         .status(404)
         .json({ err: "Указанный QR код не найден", approve: false });
     }
-    // if (qr.validated === true) {
-    //   return res.status(400).json({ err: "Этот QR код уже был использован" });
-    // }
+    if (qr.validated === true && qr.prize && qr.prize.payed) {
+      return res
+        .status(400)
+        .json({ err: "Этот код уже был использован", approve: false });
+    }
+    if (qr.validated && qr.prize) {
+      return res
+        .status(302)
+        .json({ msg: "Введите номер, имя и тд", approve: true });
+    }
     return res
       .status(200)
       .json({ msg: "Введите валидационный код", approve: true });
