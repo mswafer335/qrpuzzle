@@ -59,8 +59,13 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
     }
     if (qr.validated && qr.prize) {
       return res
-        .status(302)
-        .json({ msg: "Введите номер, имя и тд", approve: true });
+        .status(200)
+        .json({
+          msg: "Введите номер, имя и тд",
+          approve: true,
+          status: 302,
+          code: qr.prize.code,
+        });
     }
     return res
       .status(200)
