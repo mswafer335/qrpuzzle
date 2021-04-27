@@ -26,9 +26,8 @@ app.use("/admin", admin_route);
 const PORT = process.env.PORT || 1370;
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
 
-const GovnaKusok = async () => {
+const StatChecker = async () => {
   await newStat();
-  console.log("huy");
-  setTimeout(GovnaKusok, 10800000);
+  setTimeout(StatChecker, 10800000);
 };
-GovnaKusok();
+StatChecker();

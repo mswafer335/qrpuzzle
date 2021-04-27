@@ -107,7 +107,6 @@ router.get("/stats/oneday", auth, async (req, res) => {
 });
 
 // get all stats by weeks
-// get stats for last week
 router.get("/get/stats/week", async (req, res) => {
   try {
     const StatQuery = await QRStat.find();
@@ -115,11 +114,7 @@ router.get("/get/stats/week", async (req, res) => {
     const func = (stats: any) => {
       const fArr = [];
       while (fArr.length < 7 && stats.length > 0) {
-        // if (stats.length >= 1) {
           fArr.push(stats.pop());
-        // } else {
-        //   break;
-        // }
       }
       const week = {
         PrizesClaimed: 0,
