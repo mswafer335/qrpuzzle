@@ -34,13 +34,28 @@ router.put("/phone", async (req: Request, res: Response) => {
           "Коды суммой более 50 рублей нельзя использовать для пополнения счета телефона",
       });
     }
-    let pay = await asyncWallet.toMobilePhone({
-      amount: prize.value,
-      comment: "Выигрыш кода QR пазла",
-      account: req.body.phone,
-    });
-    console.log(pay);
     prize.payed = true;
+    await callbackWallet.toMobilePhone(
+      {
+        amount: prize.value,
+        comment: "Выигрыш кода QR пазла",
+        account: req.body.phone,
+      },
+      (err: any, data: any) => {
+        if (err) {
+          prize.payed = false;
+          console.log("err",err);
+        }
+        console.log("data",data);
+      }
+    );
+    // let pay = await asyncWallet.toMobilePhone({
+    //   amount: prize.value,
+    //   comment: "Выигрыш кода QR пазла",
+    //   account: req.body.phone,
+    // });
+    // console.log(pay);
+    // prize.payed = true;
     await prize.save();
     return res.json({ msg: "Деньги отправлены" });
   } catch (error) {
@@ -78,12 +93,11 @@ router.put("/card", async (req: Request, res: Response) => {
       (err: any, data: any) => {
         if (err) {
           prize.payed = false;
-          throw err;
+          console.log("err",err);
         }
-        console.log(data);
+        console.log("data",data);
       }
     );
-    //   console.log(pay)
     await prize.save();
     return res.json({ msg: "Деньги отправлены" });
   } catch (error) {
