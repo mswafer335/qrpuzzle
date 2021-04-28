@@ -68,6 +68,7 @@ router.put("/card", async (req: Request, res: Response) => {
           "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
       });
     }
+    prize.payed = true;
     await callbackWallet.toCard(
       {
         amount: prize.value,
@@ -75,12 +76,14 @@ router.put("/card", async (req: Request, res: Response) => {
         account: req.body.card,
       },
       (err: any, data: any) => {
-        if (err) throw err;
+        if (err) {
+          prize.payed = false;
+          throw err;
+        }
         console.log(data);
       }
     );
     //   console.log(pay)
-    prize.payed = true;
     await prize.save();
     return res.json({ msg: "Деньги отправлены" });
   } catch (error) {
