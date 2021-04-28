@@ -93,15 +93,15 @@ router.put("/win/:qr", async (req: Request, res: Response) => {
     }
     // prize.qr = qr._id;
     // prize.validated = true;
-    prize.activation_date = new Date();
+    prize.ActivationDate = new Date();
     qr.validated = true;
     qr.prize = prize._id;
     await prize.save();
-    console.log(prize.activation_date, prize.code);
+    console.log(prize.ActivationDate, prize.code);
     await qr.save();
     await Prize.findOneAndUpdate(
       { code: req.body.code.toLowerCase() },
-      { qr: qr._id, validated: true, activation_date: new Date() }
+      { qr: qr._id, validated: true, ActivationDate: new Date() }
     );
     await Bundle.findOneAndUpdate(
       { prizes: prize._id },
@@ -131,7 +131,7 @@ router.put("/claim", async (req: Request, res: Response) => {
       return res.status(400).json({ err: "Код невалиден" });
     }
     const date = new Date();
-    if (Number(date) - Number(code.activation_date) > 604800000) {
+    if (Number(date) - Number(code.ActivationDate) > 604800000) {
       return res.status(400).json({ err: "Истек срок годности кода" });
     }
     if (!user) {
