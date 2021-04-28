@@ -120,19 +120,14 @@ router.get("/stats/oneday", auth_1.default, (req, res) => __awaiter(void 0, void
     }
 }));
 // get all stats by weeks
-// get stats for last week
-router.get("/get/stats/week", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/stats/week", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const StatQuery = yield QRStat_1.default.find();
         const arr = [];
         const func = (stats) => {
             const fArr = [];
             while (fArr.length < 7 && stats.length > 0) {
-                // if (stats.length >= 1) {
                 fArr.push(stats.pop());
-                // } else {
-                //   break;
-                // }
             }
             const week = {
                 PrizesClaimed: 0,

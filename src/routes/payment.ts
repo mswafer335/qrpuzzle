@@ -18,7 +18,7 @@ const asyncWallet = new asyncApi(process.env.QIWI_TOKEN);
 // phone payment
 router.put("/phone", async (req: Request, res: Response) => {
   try {
-    let prize = await Prize.findOne({ code: req.body.code });
+    const prize = await Prize.findOne({ code: req.body.code });
     if (!prize) {
       return res.status(404).json({ err: "Указанный код не найден" });
     }
@@ -44,9 +44,9 @@ router.put("/phone", async (req: Request, res: Response) => {
       (err: any, data: any) => {
         if (err) {
           prize.payed = false;
-          console.log("err",err);
+          console.log("err", err);
         }
-        console.log("data",data);
+        console.log("data", data);
       }
     );
     // let pay = await asyncWallet.toMobilePhone({
@@ -67,7 +67,7 @@ router.put("/phone", async (req: Request, res: Response) => {
 // card payment
 router.put("/card", async (req: Request, res: Response) => {
   try {
-    let prize = await Prize.findOne({ code: req.body.code });
+    const prize = await Prize.findOne({ code: req.body.code });
     if (!prize) {
       return res.status(404).json({ err: "Указанный код не найден" });
     }
@@ -84,6 +84,8 @@ router.put("/card", async (req: Request, res: Response) => {
       });
     }
     prize.payed = true;
+    let test: any = 1;
+    console.log(test);
     await callbackWallet.toCard(
       {
         amount: prize.value,
@@ -92,14 +94,28 @@ router.put("/card", async (req: Request, res: Response) => {
       },
       (err: any, data: any) => {
         if (err) {
-          prize.payed = false;
-          console.log("err",err);
+          console.log("err", err);
         }
-        console.log("data",data);
+        test = data;
+        console.log("data", data);
+        console.log("test", test);
       }
     );
+    // if(test === undefined){
+    //     prize.payed = false
+    // }
+    const response: any = {};
+    console.log("after", test);
+    if (test === undefined) {
+      prize.payed = false;
+      response.msg = "Ошибка якась";
+    } else {
+      prize.payed = true;
+      response.msg = "Вроде прошло";
+    }
+    // test === undefined ? prize.payed = false : prize.payed = true
     await prize.save();
-    return res.json({ msg: "Деньги отправлены" });
+    return res.json(response);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });

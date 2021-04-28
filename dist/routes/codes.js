@@ -34,12 +34,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const router = express_1.Router();
 // import { check, validationResult } from "express-validator";
-const node_qiwi_api_1 = require("node-qiwi-api");
 const dotenv = __importStar(require("dotenv"));
 dotenv.config({ path: __dirname + "/.env" });
 const auth_1 = __importDefault(require("../middleware/auth"));
-const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
-const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
 const jspdf_1 = require("jspdf");
 const qrcode_1 = __importDefault(require("qrcode"));
 const fs_1 = __importDefault(require("fs"));
@@ -75,15 +72,41 @@ const transporter = nodemailer_1.default.createTransport({
 // check QR
 router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const qr = yield QR_urls_1.default.findOne({ code: req.params.qr });
+        const qr = yield QR_urls_1.default.findOne({ code: req.params.qr }).populate("prize");
         if (!qr) {
             return res
                 .status(404)
                 .json({ err: "Указанный QR код не найден", approve: false });
         }
-        // if (qr.validated === true) {
-        //   return res.status(400).json({ err: "Этот QR код уже был использован" });
-        // }
+        if (qr.validated === true && qr.prize && qr.prize.payed) {
+            return res
+                .status(400)
+                .json({ err: "Этот код уже был использован", approve: false });
+        }
+        if (qr.validated === true &&
+            qr.prize &&
+            qr.prize.player &&
+            !qr.prize.payed) {
+            const response = {
+                value: qr.prize.value,
+                msg: qr.prize.value <= 50
+                    ? "Введите номер телефона для пополнения счета"
+                    : "Введите номер карты для перевода денег",
+                approve: true,
+                code: qr.prize.code,
+                phone: true,
+            };
+            return res.status(200).json(response);
+        }
+        if (qr.validated && qr.prize) {
+            return res.status(200).json({
+                msg: "Введите номер, имя и тд",
+                approve: true,
+                status: 302,
+                code: qr.prize.code,
+                value: qr.prize.value,
+            });
+        }
         return res
             .status(200)
             .json({ msg: "Введите валидационный код", approve: true });
@@ -96,7 +119,6 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
 // get prize
 router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log(req.body);
         const qr = yield QR_urls_1.default.findOne({ code: req.params.qr });
         const prize = yield Prize_1.default.findOne({ code: req.body.code.toLowerCase() });
         if (!prize || !qr) {
@@ -110,18 +132,22 @@ router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function*
                 status: false,
             });
         }
-        // prize.qr = qr._id;
-        // prize.validated = true;
-        // prize.activation_date = new Date();
+        prize.qr = qr._id;
+        prize.validated = true;
+        prize.ActivationDate = new Date();
         qr.validated = true;
         qr.prize = prize._id;
         yield prize.save();
+        // console.log(prize.ActivationDate, prize.code);
         yield qr.save();
-        yield Prize_1.default.findOneAndUpdate({ code: req.body.code.toLowerCase() }, { qr: qr._id, validated: true, activation_date: new Date() });
+        // await Prize.findOneAndUpdate(
+        //   { code: req.body.code.toLowerCase() },
+        //   { qr: qr._id, validated: true, ActivationDate: new Date() }
+        // );
         yield Bundle_1.default.findOneAndUpdate({ prizes: prize._id }, { $inc: { amount_validated: 1 } });
         yield stats_1.default({
-            PrizesActivated: { $inc: 1 },
-            TotalWinnings: { $inc: prize.value },
+            $inc: { PrizesActivated: 1, TotalWinnings: prize.value },
+            // TotalWinnings: { $inc: prize.value },
         });
         return res.json({
             msg: `Вы выиграли ${prize.value} рублей!`,
@@ -143,7 +169,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             return res.status(400).json({ err: "Код невалиден" });
         }
         const date = new Date();
-        if (Number(date) - Number(code.activation_date) > 604800000) {
+        if (Number(date) - Number(code.ActivationDate) > 604800000) {
             return res.status(400).json({ err: "Истек срок годности кода" });
         }
         if (!user) {
@@ -156,18 +182,20 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 prizes: [],
                 prize_sum: 0,
             });
-            yield stats_1.default({ newUsers: { $inc: 1 } });
+            yield stats_1.default({ $inc: { $newUsers: 1 } });
         }
         user.prizes.push(code);
         user.prize_sum += code.value;
-        let msg;
+        const response = { value: code.value };
         if (user.prize_sum <= 4000) {
             user.sum_ndfl = user.prize_sum;
-            code.payed = true;
-            msg = "Пользователь привязан, оплачено";
+            response.msg = "Введите номер карты для перевода денег";
+            if (code.value <= 50) {
+                response.msg =
+                    "Введите номер телефона на счет которого перевести деньги";
+            }
             yield stats_1.default({
-                PrizesClaimed: { $inc: 1 },
-                WinningsClaimed: { $inc: code.value },
+                $inc: { PrizesClaimed: 1, WinningsClaimed: code.value },
             });
         }
         else {
@@ -175,7 +203,8 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             const tax = num * 0.35;
             user.sum_ndfl = user.prize_sum - tax;
             user.tax_sum = tax;
-            msg = "Пользователь привязан, уведомление о НДФЛ не отправлено";
+            // response = { value: code.value };
+            response.msg = "Пользователь привязан, уведомление о НДФЛ не отправлено";
             // send email
             const mailOptions = {
                 from: process.env.SENDER_EMAIL,
@@ -183,7 +212,6 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
                 text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
             };
-            console.log("pre send");
             transporter.sendMail(mailOptions, (err, info) => {
                 if (err)
                     throw err;
@@ -193,7 +221,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         yield user.save();
         code.player = user;
         yield code.save();
-        res.json({ msg });
+        res.json(response);
     }
     catch (error) {
         console.error(error);

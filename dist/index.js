@@ -38,6 +38,7 @@ const codes_1 = __importDefault(require("./routes/codes"));
 const bundles_1 = __importDefault(require("./routes/bundles"));
 const users_1 = __importDefault(require("./routes/users"));
 const management_1 = __importDefault(require("./routes/management"));
+const payment_1 = __importDefault(require("./routes/payment"));
 const dotenv = __importStar(require("dotenv"));
 const newStat_1 = __importDefault(require("./middleware/newStat"));
 dotenv.config();
@@ -52,12 +53,12 @@ app.use("/codes", codes_1.default);
 app.use("/bundles", bundles_1.default);
 app.use("/users", users_1.default);
 app.use("/admin", management_1.default);
+app.use("/pay", payment_1.default);
 const PORT = process.env.PORT || 1370;
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
-const GovnaKusok = () => __awaiter(void 0, void 0, void 0, function* () {
+const StatChecker = () => __awaiter(void 0, void 0, void 0, function* () {
     yield newStat_1.default();
-    console.log("huy");
-    setTimeout(GovnaKusok, 10800000);
+    setTimeout(StatChecker, 1000 * 60 * 60 * 3);
 });
-GovnaKusok();
+StatChecker();
 //# sourceMappingURL=index.js.map

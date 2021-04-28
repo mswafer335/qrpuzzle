@@ -24,6 +24,7 @@ const QRStatSchema = new mongoose_1.Schema({
     },
     newUsers: {
         type: Number,
+        default: 0,
     },
 });
 const QRStat = mongoose_1.model("qrstat", QRStatSchema);
