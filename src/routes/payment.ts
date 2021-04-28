@@ -75,8 +75,8 @@ router.put("/card", async (req: Request, res: Response) => {
         account: req.body.card,
       },
       (err: any, data: any) => {
-        console.log(data);
         if (err) throw err;
+        console.log(data);
       }
     );
     //   console.log(pay)
