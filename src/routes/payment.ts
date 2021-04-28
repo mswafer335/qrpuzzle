@@ -39,10 +39,10 @@ router.put("/phone", async (req: Request, res: Response) => {
       comment: "Выигрыш кода QR пазла",
       account: req.body.phone,
     });
-    console.log(pay)
+    console.log(pay);
     prize.payed = true;
-    await prize.save()
-    return res.json({msg:"Деньги отправлены"})
+    await prize.save();
+    return res.json({ msg: "Деньги отправлены" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
@@ -51,36 +51,42 @@ router.put("/phone", async (req: Request, res: Response) => {
 
 // card payment
 router.put("/card", async (req: Request, res: Response) => {
-    try {
-      let prize = await Prize.findOne({ code: req.body.code });
-      if (!prize) {
-        return res.status(404).json({ err: "Указанный код не найден" });
-      }
-      if (!prize.validated || !prize.player) {
-        return res.status(400).json({ err: "Указанный код не активирован" });
-      }
-      if (prize.payed) {
-        return res.status(400).json({ err: "Указанный код уже был использован" });
-      }
-      if (prize.value < 50 || prize.value > 4000) {
-        return res.status(400).json({
-          err:
-            "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
-        });
-      }
-      let pay = await asyncWallet.toCard({
+  try {
+    let prize = await Prize.findOne({ code: req.body.code });
+    if (!prize) {
+      return res.status(404).json({ err: "Указанный код не найден" });
+    }
+    if (!prize.validated || !prize.player) {
+      return res.status(400).json({ err: "Указанный код не активирован" });
+    }
+    if (prize.payed) {
+      return res.status(400).json({ err: "Указанный код уже был использован" });
+    }
+    if (prize.value < 50 || prize.value > 4000) {
+      return res.status(400).json({
+        err:
+          "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
+      });
+    }
+    await callbackWallet.toCard(
+      {
         amount: prize.value,
         comment: "Выигрыш кода QR пазла",
         account: req.body.card,
-      });
-      console.log(pay)
-      prize.payed = true;
-      await prize.save()
-      return res.json({msg:"Деньги отправлены"})
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ err: "server error" });
-    }
-  });
+      },
+      (err: any, data: any) => {
+        console.log(data);
+        if (err) throw err;
+      }
+    );
+    //   console.log(pay)
+    prize.payed = true;
+    await prize.save();
+    return res.json({ msg: "Деньги отправлены" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
 
 export default router;
