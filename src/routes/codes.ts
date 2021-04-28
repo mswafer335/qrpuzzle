@@ -78,7 +78,6 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
 // get prize
 router.put("/win/:qr", async (req: Request, res: Response) => {
   try {
-    console.log(req.body);
     const qr = await QR.findOne({ code: req.params.qr });
     const prize = await Prize.findOne({ code: req.body.code.toLowerCase() });
     if (!prize || !qr) {
@@ -94,10 +93,11 @@ router.put("/win/:qr", async (req: Request, res: Response) => {
     }
     // prize.qr = qr._id;
     // prize.validated = true;
-    // prize.activation_date = new Date();
+    prize.activation_date = new Date();
     qr.validated = true;
     qr.prize = prize._id;
     await prize.save();
+    console.log(prize.activation_date, prize.code);
     await qr.save();
     await Prize.findOneAndUpdate(
       { code: req.body.code.toLowerCase() },
@@ -155,7 +155,6 @@ router.put("/claim", async (req: Request, res: Response) => {
       msg = "Пользователь привязан, оплачено";
       await stat({
         $inc: { PrizesClaimed: 1, WinningsClaimed: code.value },
-        // WinningsClaimed: { $inc: code.value },
       });
     } else {
       const num = user.prize_sum - 4000;
@@ -170,7 +169,6 @@ router.put("/claim", async (req: Request, res: Response) => {
         subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
         text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
       };
-      console.log("pre send");
       transporter.sendMail(mailOptions, (err, info) => {
         if (err) throw err;
         console.log(info.response);
