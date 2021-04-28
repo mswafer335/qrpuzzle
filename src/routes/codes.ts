@@ -63,10 +63,12 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
       let response: any = {
         value: qr.prize.value,
         msg:
-          qr.prize.value > 50
+          qr.prize.value <= 50
             ? "Введите номер телефона для пополнения счета"
             : "Введите номер карты для перевода денег",
         approve: true,
+        code: qr.prize.code,
+        phone: true,
       };
 
       return res.status(200).json(response);
@@ -165,10 +167,7 @@ router.put("/claim", async (req: Request, res: Response) => {
     let response: any = { value: code.value };
     if (user.prize_sum <= 4000) {
       user.sum_ndfl = user.prize_sum;
-      // response = {
-      // value: code.value,
       response.msg = "Введите номер карты для перевода денег";
-      // };
       if (code.value <= 50) {
         response.msg =
           "Введите номер телефона на счет которого перевести деньги";

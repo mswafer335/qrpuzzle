@@ -107,7 +107,7 @@ router.get("/stats/oneday", auth, async (req, res) => {
 });
 
 // get all stats by weeks
-router.get("/get/stats/week", async (req, res) => {
+router.get("/stats/week",auth, async (req, res) => {
   try {
     const StatQuery = await QRStat.find();
     const arr = [];

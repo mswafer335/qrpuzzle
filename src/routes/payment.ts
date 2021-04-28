@@ -23,16 +23,64 @@ router.put("/phone", async (req: Request, res: Response) => {
       return res.status(404).json({ err: "Указанный код не найден" });
     }
     if (!prize.validated || !prize.player) {
-      return res.json({ err: "Указанный код не активирован" });
+      return res.status(400).json({ err: "Указанный код не активирован" });
     }
     if (prize.payed) {
       return res.status(400).json({ err: "Указанный код уже был использован" });
     }
-    return
+    if (prize.value > 50) {
+      return res.status(400).json({
+        err:
+          "Коды суммой более 50 рублей нельзя использовать для пополнения счета телефона",
+      });
+    }
+    let pay = await asyncWallet.toMobilePhone({
+      amount: prize.value,
+      comment: "Выигрыш кода QR пазла",
+      account: req.body.phone,
+    });
+    console.log(pay)
+    prize.payed = true;
+    await prize.save()
+    return res.json({msg:"Деньги отправлены"})
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
   }
 });
+
+// card payment
+router.put("/card", async (req: Request, res: Response) => {
+    try {
+      let prize = await Prize.findOne({ code: req.body.code });
+      if (!prize) {
+        return res.status(404).json({ err: "Указанный код не найден" });
+      }
+      if (!prize.validated || !prize.player) {
+        return res.status(400).json({ err: "Указанный код не активирован" });
+      }
+      if (prize.payed) {
+        return res.status(400).json({ err: "Указанный код уже был использован" });
+      }
+      if (prize.value < 50 || prize.value > 4000) {
+        return res.status(400).json({
+          err:
+            "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
+        });
+      }
+      let pay = await asyncWallet.toCard({
+        amount: prize.value,
+        comment: "Выигрыш кода QR пазла",
+        account: req.body.card,
+      });
+      console.log(pay)
+      prize.payed = true;
+      await prize.save()
+      return res.json({msg:"Деньги отправлены"})
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ err: "server error" });
+    }
+  });
 
 export default router;
