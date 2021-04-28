@@ -162,7 +162,6 @@ router.put("/claim", async (req: Request, res: Response) => {
     }
     user.prizes.push(code);
     user.prize_sum += code.value;
-    let msg: string;
     let response: any = { value: code.value };
     if (user.prize_sum <= 4000) {
       user.sum_ndfl = user.prize_sum;
