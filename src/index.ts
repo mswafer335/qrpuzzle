@@ -5,6 +5,7 @@ import code_route from "./routes/codes";
 import bundle_route from "./routes/bundles";
 import user_route from "./routes/users";
 import admin_route from "./routes/management";
+import payment_route from "./routes/payment";
 import * as dotenv from "dotenv";
 import newStat from "./middleware/newStat";
 dotenv.config();
@@ -22,6 +23,7 @@ app.use("/codes", code_route);
 app.use("/bundles", bundle_route);
 app.use("/users", user_route);
 app.use("/admin", admin_route);
+app.use("/pay", payment_route);
 
 const PORT = process.env.PORT || 1370;
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
