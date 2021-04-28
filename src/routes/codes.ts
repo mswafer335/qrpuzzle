@@ -58,14 +58,13 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
         .json({ err: "Этот код уже был использован", approve: false });
     }
     if (qr.validated && qr.prize) {
-      return res
-        .status(200)
-        .json({
-          msg: "Введите номер, имя и тд",
-          approve: true,
-          status: 302,
-          code: qr.prize.code,
-        });
+      return res.status(200).json({
+        msg: "Введите номер, имя и тд",
+        approve: true,
+        status: 302,
+        code: qr.prize.code,
+        value: qr.prize.value,
+      });
     }
     return res
       .status(200)
@@ -109,8 +108,8 @@ router.put("/win/:qr", async (req: Request, res: Response) => {
       { $inc: { amount_validated: 1 } }
     );
     await stat({
-      PrizesActivated: { $inc: 1 },
-      TotalWinnings: { $inc: prize.value },
+      $inc: { PrizesActivated: 1, TotalWinnings: prize.value },
+      // TotalWinnings: { $inc: prize.value },
     });
     return res.json({
       msg: `Вы выиграли ${prize.value} рублей!`,
@@ -145,7 +144,7 @@ router.put("/claim", async (req: Request, res: Response) => {
         prizes: [],
         prize_sum: 0,
       });
-      await stat({ newUsers: { $inc: 1 } });
+      await stat({ $inc: { $newUsers: 1 } });
     }
     user.prizes.push(code);
     user.prize_sum += code.value;
@@ -155,8 +154,8 @@ router.put("/claim", async (req: Request, res: Response) => {
       code.payed = true;
       msg = "Пользователь привязан, оплачено";
       await stat({
-        PrizesClaimed: { $inc: 1 },
-        WinningsClaimed: { $inc: code.value },
+        $inc: { PrizesClaimed: 1, WinningsClaimed: code.value },
+        // WinningsClaimed: { $inc: code.value },
       });
     } else {
       const num = user.prize_sum - 4000;

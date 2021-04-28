@@ -28,6 +28,6 @@ app.listen(PORT, () => console.log(`Server started on ${PORT}`));
 
 const StatChecker = async () => {
   await newStat();
-  setTimeout(StatChecker, 10800000);
+  setTimeout(StatChecker, 1000 * 60 * 60 * 3);
 };
 StatChecker();
