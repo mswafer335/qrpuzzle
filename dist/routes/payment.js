@@ -39,6 +39,22 @@ const node_qiwi_api_1 = require("node-qiwi-api");
 const Prize_1 = __importDefault(require("../models/Prize"));
 const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
+const luhnAlgorithm = (digits) => {
+    let sum = 0;
+    for (let i = 0; i < digits.length; i++) {
+        let cardNum = parseInt(digits[i], 10);
+        if (i % 2 === 0) {
+            cardNum = cardNum * 2;
+            if (cardNum > 9) {
+                cardNum = cardNum - 9;
+            }
+        }
+        console.log(cardNum);
+        sum += cardNum;
+    }
+    console.log("sum", sum);
+    return sum % 10 === 0;
+};
 // phone payment
 router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -102,37 +118,34 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 err: "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
             });
         }
-        prize.payed = true;
-        let test = 1;
-        console.log(test);
+        if (!luhnAlgorithm(req.body.card)) {
+            return res.status(400).json({ err: "Введена неверная карта" });
+        }
+        // const response: any = {};
         yield callbackWallet.toCard({
             amount: prize.value,
             comment: "Выигрыш кода QR пазла",
             account: req.body.card,
-        }, (err, data) => {
-            if (err) {
+        }, (err, data) => __awaiter(void 0, void 0, void 0, function* () {
+            if (err || data === undefined) {
+                prize.payed = false;
                 console.log("err", err);
+                const response = {};
+                response.msg = "Что-то пошло не так";
+                response.payed = false;
+                yield prize.save();
+                return res.json(response);
             }
-            test = data;
-            console.log("data", data);
-            console.log("test", test);
-        });
-        // if(test === undefined){
-        //     prize.payed = false
-        // }
-        const response = {};
-        console.log("after", test);
-        if (test === undefined) {
-            prize.payed = false;
-            response.msg = "Ошибка якась";
-        }
-        else {
-            prize.payed = true;
-            response.msg = "Вроде прошло";
-        }
-        // test === undefined ? prize.payed = false : prize.payed = true
-        yield prize.save();
-        return res.json(response);
+            else {
+                prize.payed = true;
+                console.log("data", data);
+                const response = {};
+                response.msg = "Оплата прошла?";
+                response.payed = true;
+                yield prize.save();
+                return res.json(response);
+            }
+        }));
     }
     catch (error) {
         console.error(error);
