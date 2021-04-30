@@ -49,10 +49,8 @@ const luhnAlgorithm = (digits) => {
                 cardNum = cardNum - 9;
             }
         }
-        console.log(cardNum);
         sum += cardNum;
     }
-    console.log("sum", sum);
     return sum % 10 === 0;
 };
 // phone payment
@@ -73,27 +71,24 @@ router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 err: "Коды суммой более 50 рублей нельзя использовать для пополнения счета телефона",
             });
         }
-        prize.payed = true;
         yield callbackWallet.toMobilePhone({
             amount: prize.value,
             comment: "Выигрыш кода QR пазла",
             account: req.body.phone,
-        }, (err, data) => {
+        }, (err, data) => __awaiter(void 0, void 0, void 0, function* () {
             if (err) {
                 prize.payed = false;
                 console.log("err", err);
+                yield prize.save();
+                return res.json({ msg: "Что-то пошло не так", payed: false });
             }
-            console.log("data", data);
-        });
-        // let pay = await asyncWallet.toMobilePhone({
-        //   amount: prize.value,
-        //   comment: "Выигрыш кода QR пазла",
-        //   account: req.body.phone,
-        // });
-        // console.log(pay);
-        // prize.payed = true;
-        yield prize.save();
-        return res.json({ msg: "Деньги отправлены" });
+            else {
+                console.log("data", data);
+                prize.payed = true;
+                yield prize.save();
+                return res.json({ msg: "Деньги отправлены", payed: true });
+            }
+        }));
     }
     catch (error) {
         console.error(error);
@@ -134,7 +129,7 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 response.msg = "Что-то пошло не так";
                 response.payed = false;
                 yield prize.save();
-                return res.json(response);
+                return res.status(400).json(response);
             }
             else {
                 prize.payed = true;

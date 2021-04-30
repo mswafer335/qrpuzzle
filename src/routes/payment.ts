@@ -114,7 +114,7 @@ router.put("/card", async (req: Request, res: Response) => {
           response.msg = "Что-то пошло не так";
           response.payed = false;
           await prize.save();
-          return res.json(response);
+          return res.status(400).json(response);
         } else {
           prize.payed = true;
           console.log("data", data);
