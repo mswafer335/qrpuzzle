@@ -510,7 +510,7 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
           margin: 0.5,
           color: {
             dark: "#000000",
-            light: "#ffdc00",
+            light: "#fae600",
           },
         })
           .then((url) => {
