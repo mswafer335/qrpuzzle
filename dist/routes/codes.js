@@ -43,8 +43,9 @@ const fs_1 = __importDefault(require("fs"));
 const archiver_1 = __importDefault(require("archiver"));
 const path_1 = __importDefault(require("path"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
-// import sharp from "sharp";
+const image_to_base64_1 = __importDefault(require("image-to-base64"));
 const sans_1 = require("../public/fonts/sans");
+// import { instruction } from "../public/instruction";
 const Prize_1 = __importDefault(require("../models/Prize"));
 const QR_urls_1 = __importDefault(require("../models/QR-urls"));
 const Bundle_1 = __importDefault(require("../models/Bundle"));
@@ -343,7 +344,7 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
     }
 }));
 // generator
-router.post("/genold", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/genold", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let date = new Date();
         date =
@@ -481,6 +482,24 @@ router.post("/genold", (req, res) => __awaiter(void 0, void 0, void 0, function*
 /// gen chunk
 router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        let instruction;
+        yield image_to_base64_1.default(__dirname + "/../public/0001.jpg").then((response) => (instruction = response));
+        let mainQR;
+        yield qrcode_1.default.toDataURL("https://me-qr.com/202426", {
+            errorCorrectionLevel: "H",
+            type: "image/jpeg",
+            margin: 0.5,
+            color: {
+                dark: "#000000",
+                light: "#FAD620",
+            },
+        })
+            .then((url) => {
+            mainQR = url;
+        })
+            .catch((err) => {
+            console.error(err);
+        });
         let date = new Date();
         date =
             date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
@@ -525,11 +544,10 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 yield qrcode_1.default.toDataURL(QRinput, {
                     errorCorrectionLevel: "H",
                     type: "image/jpeg",
-                    // quality: 0.2,
                     margin: 0.5,
                     color: {
                         dark: "#000000",
-                        light: "#ffdc00",
+                        light: "#FAD620",
                     },
                 })
                     .then((url) => {
@@ -544,18 +562,15 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 doc.addFileToVFS("sans.ttf", sans_1.font);
                 doc.addFont("sans.ttf", "sans", "normal");
                 doc.setFont("sans");
-                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
+                doc.setFillColor("#FAD620");
                 doc.rect(5, 5, 310, 310, "FD");
-                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
-                doc.rect(320, 5, 125, 310, "FD");
-                // doc.setLineWidth(2);
-                // doc.rect(10, 10, 300, 300, "FD");
-                doc.setFontSize(23);
-                doc.text("Текст инструкции:", 335, 200);
-                doc.text("Тут будет инструкция", 335, 220);
-                doc.text("Валидационный код:", 335, 290);
-                doc.text(CodePrint, 335, 300);
+                doc.setFontSize(18);
+                doc.setTextColor("#FAD620");
                 doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
+                doc.addImage(instruction, "jpeg", 320, 5, 125, 310);
+                doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
+                doc.text(CodePrint, 383, 192, null, 'center');
+                doc.rect(320, 5, 125, 310);
                 const PrizeObj = new Prize_1.default({
                     code: CodeFinal,
                     value: price,

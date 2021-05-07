@@ -12,7 +12,7 @@ import fs from "fs";
 import archiver from "archiver";
 import path from "path";
 import nodemailer from "nodemailer";
-// import sharp from "sharp";
+import imageToBase64 from "image-to-base64";
 import { font } from "../public/fonts/sans";
 import Prize, { IPrize } from "../models/Prize";
 import QR, { IQR } from "../models/QR-urls";
@@ -319,7 +319,7 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 });
 
 // generator
-router.post("/genold", async (req: Request, res: Response) => {
+router.post("/genold", auth, async (req: Request, res: Response) => {
   try {
     let date: any = new Date();
     date =
@@ -460,6 +460,26 @@ router.post("/genold", async (req: Request, res: Response) => {
 /// gen chunk
 router.post("/generatecodes", async (req: Request, res: Response) => {
   try {
+    let instruction: string;
+    await imageToBase64(__dirname + "/../public/0001.jpg").then(
+      (response) => (instruction = response)
+    );
+    let mainQR:string;
+    await QRCode.toDataURL("https://me-qr.com/202426", {
+      errorCorrectionLevel: "H",
+      type: "image/jpeg",
+      margin: 0.5,
+      color: {
+        dark: "#000000",
+        light: "#FAD620",
+      },
+    })
+      .then((url) => {
+        mainQR = url;
+      })
+      .catch((err) => {
+        console.error(err);
+      });
     let date: any = new Date();
     date =
       date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
@@ -506,11 +526,10 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
         await QRCode.toDataURL(QRinput, {
           errorCorrectionLevel: "H",
           type: "image/jpeg",
-          // quality: 0.2,
           margin: 0.5,
           color: {
             dark: "#000000",
-            light: "#fad720",
+            light: "#FAD620",
           },
         })
           .then((url) => {
@@ -525,18 +544,15 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
         doc.addFileToVFS("sans.ttf", font);
         doc.addFont("sans.ttf", "sans", "normal");
         doc.setFont("sans");
-        doc.setFillColor(0.02, 0.1, 1.0, 0.0);
+        doc.setFillColor("#FAD620");
         doc.rect(5, 5, 310, 310, "FD");
-        doc.setFillColor(0.02, 0.1, 1.0, 0.0);
-        doc.rect(320, 5, 125, 310, "FD");
-        // doc.setLineWidth(2);
-        // doc.rect(10, 10, 300, 300, "FD");
-        doc.setFontSize(23);
-        doc.text("Текст инструкции:", 335, 200);
-        doc.text("Тут будет инструкция", 335, 220);
-        doc.text("Валидационный код:", 335, 290);
-        doc.text(CodePrint, 335, 300);
+        doc.setFontSize(18);
+        doc.setTextColor("#FAD620")
         doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
+        doc.addImage(instruction, "jpeg", 320, 5, 125, 310);
+        doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
+        doc.text(CodePrint, 383, 192, null ,'center');
+        doc.rect(320, 5, 125, 310);
         const PrizeObj: IPrize = new Prize({
           code: CodeFinal,
           value: price,

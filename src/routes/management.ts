@@ -110,6 +110,7 @@ router.get("/stats/oneday", auth, async (req, res) => {
 router.get("/stats/week",auth, async (req, res) => {
   try {
     const StatQuery = await QRStat.find();
+    const StatDaily = [...StatQuery]
     const arr = [];
     const func = (stats: any) => {
       const fArr = [];
@@ -154,6 +155,7 @@ router.get("/stats/week",auth, async (req, res) => {
       totalSum,
       totalNonValidated,
       totalNonValidatedSum,
+      StatDaily,
     });
   } catch (error) {
     console.error(error);
