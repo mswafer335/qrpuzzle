@@ -72,7 +72,10 @@ const transporter = nodemailer_1.default.createTransport({
 // check QR
 router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const qr = yield QR_urls_1.default.findOne({ code: req.params.qr }).populate("prize");
+        const qr = yield QR_urls_1.default.findOne({ code: req.params.qr }).populate({
+            path: "prize",
+            populate: { path: "player" },
+        });
         if (!qr) {
             return res
                 .status(404)
@@ -103,6 +106,7 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 approve: true,
                 code: qr.prize.code,
                 phone: true,
+                totalSum: qr.prize.player.prize_sum,
             };
             return res.status(200).json(response);
         }
@@ -216,17 +220,16 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             response.msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
             response.totalSum = user.prize_sum;
             // send email
-            const mailOptions = {
-                from: process.env.SENDER_EMAIL,
-                to: process.env.RECEIVER_EMAIL,
-                subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
-                text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
-            };
-            transporter.sendMail(mailOptions, (err, info) => {
-                if (err)
-                    throw err;
-                console.log(info.response);
-            });
+            // const mailOptions = {
+            //   from: process.env.SENDER_EMAIL,
+            //   to: process.env.RECEIVER_EMAIL,
+            //   subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
+            //   text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
+            // };
+            // transporter.sendMail(mailOptions, (err, info) => {
+            //   if (err) throw err;
+            //   console.log(info.response);
+            // });
         }
         yield user.save();
         code.player = user;

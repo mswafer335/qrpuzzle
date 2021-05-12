@@ -43,7 +43,10 @@ const transporter = nodemailer.createTransport({
 // check QR
 router.get("/qr/:qr", async (req: Request, res: Response) => {
   try {
-    const qr = await QR.findOne({ code: req.params.qr }).populate("prize");
+    const qr = await QR.findOne({ code: req.params.qr }).populate({
+      path: "prize",
+      populate: { path: "player" },
+    });
     if (!qr) {
       return res
         .status(404)
@@ -79,6 +82,7 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
         approve: true,
         code: qr.prize.code,
         phone: true,
+        totalSum: qr.prize.player.prize_sum,
       };
 
       return res.status(200).json(response);
@@ -195,16 +199,16 @@ router.put("/claim", async (req: Request, res: Response) => {
       response.msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
       response.totalSum = user.prize_sum;
       // send email
-      const mailOptions = {
-        from: process.env.SENDER_EMAIL,
-        to: process.env.RECEIVER_EMAIL,
-        subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
-        text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
-      };
-      transporter.sendMail(mailOptions, (err, info) => {
-        if (err) throw err;
-        console.log(info.response);
-      });
+      // const mailOptions = {
+      //   from: process.env.SENDER_EMAIL,
+      //   to: process.env.RECEIVER_EMAIL,
+      //   subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
+      //   text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
+      // };
+      // transporter.sendMail(mailOptions, (err, info) => {
+      //   if (err) throw err;
+      //   console.log(info.response);
+      // });
     }
     await user.save();
     code.player = user;
