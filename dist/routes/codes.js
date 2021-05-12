@@ -45,7 +45,6 @@ const path_1 = __importDefault(require("path"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const image_to_base64_1 = __importDefault(require("image-to-base64"));
 const sans_1 = require("../public/fonts/sans");
-// import { instruction } from "../public/instruction";
 const Prize_1 = __importDefault(require("../models/Prize"));
 const QR_urls_1 = __importDefault(require("../models/QR-urls"));
 const Bundle_1 = __importDefault(require("../models/Bundle"));
@@ -83,6 +82,14 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
             return res
                 .status(400)
                 .json({ err: "Этот код уже был использован", approve: false });
+        }
+        const date = new Date();
+        if (qr.prize &&
+            qr.prize.ActivationDate &&
+            Number(date) - Number(qr.prize.ActivationDate) > 604800000) {
+            return res
+                .status(400)
+                .json({ err: "Истек срок годности кода", dateInvalid: true });
         }
         if (qr.validated === true &&
             qr.prize &&
@@ -185,6 +192,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             });
             yield stats_1.default({ $inc: { $newUsers: 1 } });
         }
+        user.prizes_activated += 1;
         user.prizes.push(code);
         user.prize_sum += code.value;
         const response = { value: code.value };
@@ -205,7 +213,8 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             user.sum_ndfl = user.prize_sum - tax;
             user.tax_sum = tax;
             // response = { value: code.value };
-            response.msg = "Пользователь привязан, уведомление о НДФЛ не отправлено";
+            response.msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
+            response.totalSum = user.prize_sum;
             // send email
             const mailOptions = {
                 from: process.env.SENDER_EMAIL,
@@ -569,7 +578,7 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
                 doc.addImage(instruction, "jpeg", 320, 5, 125, 310);
                 doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
-                doc.text(CodePrint, 383, 192, null, 'center');
+                doc.text(CodePrint, 383, 192, null, "center");
                 doc.rect(320, 5, 125, 310);
                 const PrizeObj = new Prize_1.default({
                     code: CodeFinal,

@@ -10,9 +10,11 @@ services:
     volumes:
       - archive:/app/dist/public/archive
       - pdf:/app/dist/public/pdf
+      - public:/app/dist/public
 volumes: 
   archive:
   pdf:
+  public:
 #networks:
  # default:
   #  external:

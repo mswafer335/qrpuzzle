@@ -35,7 +35,9 @@ const luhnAlgorithm = (digits: string) => {
 // phone payment
 router.put("/phone", async (req: Request, res: Response) => {
   try {
-    const prize = await Prize.findOne({ code: req.body.code });
+    const prize = await Prize.findOne({ code: req.body.code }).populate(
+      "player"
+    );
     if (!prize) {
       return res.status(404).json({ err: "Указанный код не найден" });
     }
@@ -50,6 +52,9 @@ router.put("/phone", async (req: Request, res: Response) => {
         err:
           "Коды суммой более 50 рублей нельзя использовать для пополнения счета телефона",
       });
+    }
+    if (prize.player.prize_sum > 4000) {
+      return res.status(400).json({ err: "Оплата выше 4к так не работает" });
     }
     await callbackWallet.toMobilePhone(
       {
@@ -80,7 +85,9 @@ router.put("/phone", async (req: Request, res: Response) => {
 // card payment
 router.put("/card", async (req: Request, res: Response) => {
   try {
-    const prize = await Prize.findOne({ code: req.body.code });
+    const prize = await Prize.findOne({ code: req.body.code }).populate(
+      "player"
+    );
     if (!prize) {
       return res.status(404).json({ err: "Указанный код не найден" });
     }
@@ -96,36 +103,39 @@ router.put("/card", async (req: Request, res: Response) => {
           "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
       });
     }
+    if (prize.player.prize_sum > 4000) {
+      return res.status(400).json({ err: "Оплата выше 4к так не работает" });
+    }
     if (!luhnAlgorithm(req.body.card)) {
       return res.status(400).json({ err: "Введена неверная карта" });
     }
     // const response: any = {};
-    await callbackWallet.toCard(
-      {
-        amount: prize.value,
-        comment: "Выигрыш кода QR пазла",
-        account: req.body.card,
-      },
-      async (err: any, data: any) => {
-        if (err || data === undefined) {
-          prize.payed = false;
-          console.log("err", err);
-          const response: any = {};
-          response.msg = "Что-то пошло не так";
-          response.payed = false;
-          await prize.save();
-          return res.status(400).json(response);
-        } else {
+    // await callbackWallet.toCard(
+    //   {
+    //     amount: prize.value,
+    //     comment: "Выигрыш кода QR пазла",
+    //     account: req.body.card,
+    //   },
+    //   async (err: any, data: any) => {
+    //     if (err || data === undefined) {
+    //       prize.payed = false;
+    //       console.log("err", err);
+    //       const response: any = {};
+    //       response.msg = "Что-то пошло не так";
+    //       response.payed = false;
+    //       await prize.save();
+    //       return res.status(400).json(response);
+    //     } else {
           prize.payed = true;
-          console.log("data", data);
+          // console.log("data", data);
           const response: any = {};
           response.msg = "Оплата прошла?";
           response.payed = true;
           await prize.save();
           return res.json(response);
-        }
-      }
-    );
+      //   }
+      // }
+    // );
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });

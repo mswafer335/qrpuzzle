@@ -38,6 +38,7 @@ const bcrypt = __importStar(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 dotenv.config({ path: __dirname + "/.env" });
 const Bundle_1 = __importDefault(require("../models/Bundle"));
+const Player_1 = __importDefault(require("../models/Player"));
 const Admin_1 = __importDefault(require("../models/Admin"));
 const auth_1 = __importDefault(require("../middleware/auth"));
 const QRStat_1 = __importDefault(require("../models/QRStat"));
@@ -123,6 +124,7 @@ router.get("/stats/oneday", auth_1.default, (req, res) => __awaiter(void 0, void
 router.get("/stats/week", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const StatQuery = yield QRStat_1.default.find();
+        const StatDaily = [...StatQuery];
         const arr = [];
         const func = (stats) => {
             const fArr = [];
@@ -167,7 +169,41 @@ router.get("/stats/week", auth_1.default, (req, res) => __awaiter(void 0, void 0
             totalSum,
             totalNonValidated,
             totalNonValidatedSum,
+            StatDaily,
         });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
+// add comment
+router.put("/comment/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield Player_1.default.findOne({ _id: req.params.id });
+        if (!user) {
+            return res
+                .status(404)
+                .json({ err: "Пользователь с указанным id не найден" });
+        }
+        user.comment = req.body.comment;
+        yield user.save();
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ err: "server error" });
+    }
+}));
+// count fix
+router.get("/kostil/fix", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const users = yield Player_1.default.find();
+        for (const user of users) {
+            user.prizes_activated = user.prizes.length;
+            yield user.save();
+            console.log(user.prizes_activated);
+        }
+        return res.json("uspeh");
     }
     catch (error) {
         console.error(error);

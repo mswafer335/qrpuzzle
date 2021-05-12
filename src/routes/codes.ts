@@ -175,7 +175,7 @@ router.put("/claim", async (req: Request, res: Response) => {
     user.prizes_activated += 1;
     user.prizes.push(code);
     user.prize_sum += code.value;
-    let response: any = { value: code.value };
+    const response: any = { value: code.value };
     if (user.prize_sum <= 4000) {
       user.sum_ndfl = user.prize_sum;
       response.msg = "Введите номер карты для перевода денег";

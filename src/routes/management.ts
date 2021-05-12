@@ -163,10 +163,10 @@ router.get("/stats/week", auth, async (req, res) => {
   }
 });
 
-//add comment
+// add comment
 router.put("/comment/:id", async (req: Request, res: Response) => {
   try {
-    let user = await Player.findOne({ _id: req.params.id });
+    const user = await Player.findOne({ _id: req.params.id });
     if (!user) {
       return res
         .status(404)
@@ -180,11 +180,11 @@ router.put("/comment/:id", async (req: Request, res: Response) => {
   }
 });
 
-//count fix
+// count fix
 router.get("/kostil/fix", async (req: Request, res: Response) => {
   try {
-    let users = await Player.find();
-    for (let user of users) {
+    const users = await Player.find();
+    for (const user of users) {
       user.prizes_activated = user.prizes.length;
       await user.save();
       console.log(user.prizes_activated);

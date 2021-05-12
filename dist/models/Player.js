@@ -17,6 +17,7 @@ const PlayerSchema = new mongoose_1.Schema({
     phone: {
         type: String,
     },
+    comment: { type: String },
     prizes: [
         {
             type: mongoose_1.Schema.Types.ObjectId,
@@ -24,6 +25,7 @@ const PlayerSchema = new mongoose_1.Schema({
             default: [],
         },
     ],
+    prizes_activated: { type: Number, default: 0 },
     prize_sum: { type: Number, default: 0 },
     tax_sum: { type: Number, default: 0 },
     sum_ndfl: { type: Number },
