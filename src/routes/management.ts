@@ -107,15 +107,15 @@ router.get("/stats/oneday", auth, async (req, res) => {
 });
 
 // get all stats by weeks
-router.get("/stats/week",auth, async (req, res) => {
+router.get("/stats/week", auth, async (req, res) => {
   try {
     const StatQuery = await QRStat.find();
-    const StatDaily = [...StatQuery]
+    const StatDaily = [...StatQuery];
     const arr = [];
     const func = (stats: any) => {
       const fArr = [];
       while (fArr.length < 7 && stats.length > 0) {
-          fArr.push(stats.pop());
+        fArr.push(stats.pop());
       }
       const week = {
         PrizesClaimed: 0,
@@ -157,6 +157,39 @@ router.get("/stats/week",auth, async (req, res) => {
       totalNonValidatedSum,
       StatDaily,
     });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
+
+//add comment
+router.put("/comment/:id", async (req: Request, res: Response) => {
+  try {
+    let user = await Player.findOne({ _id: req.params.id });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ err: "Пользователь с указанным id не найден" });
+    }
+    user.comment = req.body.comment;
+    await user.save();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "server error" });
+  }
+});
+
+//count fix
+router.get("/kostil/fix", async (req: Request, res: Response) => {
+  try {
+    let users = await Player.find();
+    for (let user of users) {
+      user.prizes_activated = user.prizes.length;
+      await user.save();
+      console.log(user.prizes_activated);
+    }
+    return res.json("uspeh");
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });

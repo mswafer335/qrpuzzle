@@ -54,6 +54,16 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
         .status(400)
         .json({ err: "Этот код уже был использован", approve: false });
     }
+    const date = new Date();
+    if (
+      qr.prize &&
+      qr.prize.ActivationDate &&
+      Number(date) - Number(qr.prize.ActivationDate) > 604800000
+    ) {
+      return res
+        .status(400)
+        .json({ err: "Истек срок годности кода", dateInvalid: true });
+    }
     if (
       qr.validated === true &&
       qr.prize &&
@@ -162,9 +172,10 @@ router.put("/claim", async (req: Request, res: Response) => {
       });
       await stat({ $inc: { $newUsers: 1 } });
     }
+    user.prizes_activated += 1;
     user.prizes.push(code);
     user.prize_sum += code.value;
-    const response: any = { value: code.value };
+    let response: any = { value: code.value };
     if (user.prize_sum <= 4000) {
       user.sum_ndfl = user.prize_sum;
       response.msg = "Введите номер карты для перевода денег";
@@ -181,7 +192,8 @@ router.put("/claim", async (req: Request, res: Response) => {
       user.sum_ndfl = user.prize_sum - tax;
       user.tax_sum = tax;
       // response = { value: code.value };
-      response.msg = "Пользователь привязан, уведомление о НДФЛ не отправлено";
+      response.msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
+      response.totalSum = user.prize_sum;
       // send email
       const mailOptions = {
         from: process.env.SENDER_EMAIL,
@@ -464,7 +476,7 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
     await imageToBase64(__dirname + "/../public/0001.jpg").then(
       (response) => (instruction = response)
     );
-    let mainQR:string;
+    let mainQR: string;
     await QRCode.toDataURL("https://me-qr.com/202426", {
       errorCorrectionLevel: "H",
       type: "image/jpeg",
@@ -547,11 +559,11 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
         doc.setFillColor("#FAD620");
         doc.rect(5, 5, 310, 310, "FD");
         doc.setFontSize(18);
-        doc.setTextColor("#FAD620")
+        doc.setTextColor("#FAD620");
         doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
         doc.addImage(instruction, "jpeg", 320, 5, 125, 310);
         doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
-        doc.text(CodePrint, 383, 192, null ,'center');
+        doc.text(CodePrint, 383, 192, null, "center");
         doc.rect(320, 5, 125, 310);
         const PrizeObj: IPrize = new Prize({
           code: CodeFinal,

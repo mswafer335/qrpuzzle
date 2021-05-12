@@ -7,7 +7,9 @@ export interface IPlayer extends Document {
   fullname: string;
   email: string;
   phone: string;
+  comment: string;
   prizes: IPrize["_id"];
+  prizes_activated: number;
   prize_sum: number;
   tax_sum: number;
   sum_ndfl: number;
@@ -29,6 +31,7 @@ const PlayerSchema = new Schema({
   phone: {
     type: String,
   },
+  comment: { type: String },
   prizes: [
     {
       type: Schema.Types.ObjectId,
@@ -36,6 +39,7 @@ const PlayerSchema = new Schema({
       default: [],
     },
   ],
+  prizes_activated: { type: Number, default: 0 },
   prize_sum: { type: Number, default: 0 },
   tax_sum: { type: Number, default: 0 },
   sum_ndfl: { type: Number },
