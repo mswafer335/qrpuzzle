@@ -9,6 +9,7 @@ export interface IPrize extends Document {
   value: number;
   printed: boolean;
   validated: boolean;
+  expired: boolean;
   qr: IQR["_id"];
   player: IPlayer["_id"];
   payed: boolean;
@@ -32,6 +33,10 @@ const PrizeSchema: Schema = new Schema({
     default: false,
   },
   validated: {
+    type: Boolean,
+    default: false,
+  },
+  expired: {
     type: Boolean,
     default: false,
   },

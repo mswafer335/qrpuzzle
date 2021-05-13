@@ -37,6 +37,9 @@ const dotenv = __importStar(require("dotenv"));
 dotenv.config({ path: __dirname + "/.env" });
 const Player_1 = __importDefault(require("../models/Player"));
 const auth_1 = __importDefault(require("../middleware/auth"));
+function regexEscape(str) {
+    return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+}
 // get all users
 router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -45,7 +48,9 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
         for (const key of keys) {
             QUERY_OBJ[key] = req.query[key];
         }
-        const users = yield Player_1.default.find(QUERY_OBJ).populate("prizes");
+        const users = yield Player_1.default.find(QUERY_OBJ)
+            .populate("prizes")
+            .sort({ change_date: -1 });
         res.json(users);
     }
     catch (error) {
@@ -53,17 +58,15 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
         return res.status(500).json({ err: "server error" });
     }
 }));
-// get single user
-router.get("/find/:phone", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// regex query
+router.get("/find/query", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield Player_1.default.findOne({
-            phone: { $regex: req.params.phone, $options: "i" },
-        }).populate("prizes");
-        if (!user) {
-            return res
-                .status(404)
-                .json({ err: "Пользователь с указанным номером телефона не найден" });
-        }
+        const a = req.query;
+        const query = {};
+        query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
+        const user = yield Player_1.default.find(query)
+            .populate("prizes")
+            .sort({ change_date: -1 });
         res.json(user);
     }
     catch (error) {
@@ -83,7 +86,9 @@ router.get("/find/all/ndfl", auth_1.default, (req, res) => __awaiter(void 0, voi
                 QUERY_OBJ[key] = req.query[key];
             }
         }
-        const users = yield Player_1.default.find(QUERY_OBJ).populate("prizes");
+        const users = yield Player_1.default.find(QUERY_OBJ)
+            .populate("prizes")
+            .sort({ change_date: -1 });
         res.json(users);
     }
     catch (error) {

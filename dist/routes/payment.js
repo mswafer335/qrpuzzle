@@ -37,6 +37,7 @@ const dotenv = __importStar(require("dotenv"));
 dotenv.config({ path: __dirname + "/.env" });
 const node_qiwi_api_1 = require("node-qiwi-api");
 const Prize_1 = __importDefault(require("../models/Prize"));
+const Player_1 = __importDefault(require("../models/Player"));
 const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
 const luhnAlgorithm = (digits) => {
@@ -86,6 +87,7 @@ router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 return res.json({ msg: "Что-то пошло не так", payed: false });
             }
             else {
+                yield Player_1.default.findOneAndUpdate({ prizes: prize._id }, { change_date: new Date() });
                 console.log("data", data);
                 prize.payed = true;
                 yield prize.save();
@@ -139,6 +141,7 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         //       await prize.save();
         //       return res.status(400).json(response);
         //     } else {
+        yield Player_1.default.findOneAndUpdate({ prizes: prize._id }, { change_date: new Date() });
         prize.payed = true;
         // console.log("data", data);
         const response = {};

@@ -69,6 +69,10 @@ router.put("/phone", async (req: Request, res: Response) => {
           await prize.save();
           return res.json({ msg: "Что-то пошло не так", payed: false });
         } else {
+          await Player.findOneAndUpdate(
+            { prizes: prize._id },
+            { change_date: new Date() }
+          );
           console.log("data", data);
           prize.payed = true;
           await prize.save();
@@ -126,15 +130,19 @@ router.put("/card", async (req: Request, res: Response) => {
     //       await prize.save();
     //       return res.status(400).json(response);
     //     } else {
-          prize.payed = true;
-          // console.log("data", data);
-          const response: any = {};
-          response.msg = "Оплата прошла?";
-          response.payed = true;
-          await prize.save();
-          return res.json(response);
-      //   }
-      // }
+    await Player.findOneAndUpdate(
+      { prizes: prize._id },
+      { change_date: new Date() }
+    );
+    prize.payed = true;
+    // console.log("data", data);
+    const response: any = {};
+    response.msg = "Оплата прошла?";
+    response.payed = true;
+    await prize.save();
+    return res.json(response);
+    //   }
+    // }
     // );
   } catch (error) {
     console.error(error);

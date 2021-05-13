@@ -10,6 +10,9 @@ import QR, { IQR } from "../models/QR-urls";
 import Bundle from "../models/Bundle";
 import Player from "../models/Player";
 import auth from "../middleware/auth";
+function regexEscape(str: string) {
+  return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+}
 
 // get all users
 router.get("/find/all", auth, async (req: Request, res: Response) => {
@@ -19,7 +22,9 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
     for (const key of keys) {
       QUERY_OBJ[key] = req.query[key];
     }
-    const users = await Player.find(QUERY_OBJ).populate("prizes");
+    const users = await Player.find(QUERY_OBJ)
+      .populate("prizes")
+      .sort({ change_date: -1 });
     res.json(users);
   } catch (error) {
     console.error(error);
@@ -27,17 +32,15 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
   }
 });
 
-// get single user
-router.get("/find/:phone", auth, async (req: Request, res: Response) => {
+// regex query
+router.get("/find/query", auth, async (req: Request, res: Response) => {
   try {
-    const user = await Player.findOne({
-      phone: { $regex: req.params.phone, $options: "i" },
-    }).populate("prizes");
-    if (!user) {
-      return res
-        .status(404)
-        .json({ err: "Пользователь с указанным номером телефона не найден" });
-    }
+    const a: any = req.query;
+    const query: any = {};
+    query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
+    const user = await Player.find(query)
+      .populate("prizes")
+      .sort({ change_date: -1 });
     res.json(user);
   } catch (error) {
     console.error(error);
@@ -57,7 +60,9 @@ router.get("/find/all/ndfl", auth, async (req: Request, res: Response) => {
         QUERY_OBJ[key] = req.query[key];
       }
     }
-    const users = await Player.find(QUERY_OBJ).populate("prizes");
+    const users = await Player.find(QUERY_OBJ)
+      .populate("prizes")
+      .sort({ change_date: -1 });
     res.json(users);
   } catch (error) {
     console.error(error);

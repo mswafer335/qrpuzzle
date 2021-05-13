@@ -29,6 +29,7 @@ const PlayerSchema = new mongoose_1.Schema({
     prize_sum: { type: Number, default: 0 },
     tax_sum: { type: Number, default: 0 },
     sum_ndfl: { type: Number },
+    change_date: { type: Date },
 });
 exports.default = mongoose_1.model("player", PlayerSchema);
 //# sourceMappingURL=Player.js.map

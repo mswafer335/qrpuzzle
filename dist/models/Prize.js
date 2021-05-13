@@ -22,6 +22,10 @@ const PrizeSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
+    expired: {
+        type: Boolean,
+        default: false,
+    },
     qr: { type: mongoose_1.Schema.Types.ObjectId, ref: "qr", default: undefined },
     player: { type: mongoose_1.Schema.Types.ObjectId, ref: "player", default: undefined },
     payed: {

@@ -13,6 +13,7 @@ export interface IPlayer extends Document {
   prize_sum: number;
   tax_sum: number;
   sum_ndfl: number;
+  change_date: Date;
 }
 
 const PlayerSchema = new Schema({
@@ -43,6 +44,7 @@ const PlayerSchema = new Schema({
   prize_sum: { type: Number, default: 0 },
   tax_sum: { type: Number, default: 0 },
   sum_ndfl: { type: Number },
+  change_date: { type: Date },
 });
 
 export default model<IPlayer>("player", PlayerSchema);

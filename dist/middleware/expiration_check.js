@@ -30,41 +30,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
-const db_1 = require("./middleware/db");
-const codes_1 = __importDefault(require("./routes/codes"));
-const bundles_1 = __importDefault(require("./routes/bundles"));
-const users_1 = __importDefault(require("./routes/users"));
-const management_1 = __importDefault(require("./routes/management"));
-const payment_1 = __importDefault(require("./routes/payment"));
 const dotenv = __importStar(require("dotenv"));
-const newStat_1 = __importDefault(require("./middleware/newStat"));
-const expiration_check_1 = __importDefault(require("./middleware/expiration_check"));
+const Prize_1 = __importDefault(require("../models/Prize"));
 dotenv.config();
-const app = express_1.default();
-db_1.connectDB();
-app.use(cors_1.default());
-app.use(express_1.default.json());
-app.use(express_1.default.static("public"));
-app.use("/archive", express_1.default.static(__dirname + "/archive"));
-app.get("/", (req, res) => res.send("no hack plz"));
-app.use("/codes", codes_1.default);
-app.use("/bundles", bundles_1.default);
-app.use("/users", users_1.default);
-app.use("/admin", management_1.default);
-app.use("/pay", payment_1.default);
-const PORT = process.env.PORT || 1370;
-app.listen(PORT, () => console.log(`Server started on ${PORT}`));
-const StatChecker = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield newStat_1.default();
-    setTimeout(StatChecker, 1000 * 60 * 60 * 3);
+module.exports = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const prizes = yield Prize_1.default.find({
+            expired: { $ne: true },
+            ActivationDate: { $ne: undefined },
+        });
+        const date = new Date();
+        for (const prize of prizes) {
+            if (prize.value <= 4000 &&
+                Number(date) - Number(prize.ActivationDate) > 604800000) {
+                prize.expired = true;
+                yield prize.save();
+            }
+        }
+    }
+    catch (error) {
+        console.error(error);
+    }
 });
-const ExpireCheck = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield expiration_check_1.default();
-    setTimeout(ExpireCheck, 1000 * 60 * 60 * 1);
-});
-StatChecker();
-ExpireCheck();
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=expiration_check.js.map

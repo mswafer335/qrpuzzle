@@ -107,6 +107,7 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 code: qr.prize.code,
                 phone: true,
                 totalSum: qr.prize.player.prize_sum,
+                count: qr.prize.player.prizes_activated,
             };
             return res.status(200).json(response);
         }
@@ -199,7 +200,8 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         user.prizes_activated += 1;
         user.prizes.push(code);
         user.prize_sum += code.value;
-        const response = { value: code.value };
+        user.change_date = new Date();
+        const response = { value: code.value, count: user.prizes_activated };
         if (user.prize_sum <= 4000) {
             user.sum_ndfl = user.prize_sum;
             response.msg = "Введите номер карты для перевода денег";
@@ -248,6 +250,8 @@ router.put("/pay/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, v
         if (!user) {
             return res.status(404).json({ err: "Код не найден" });
         }
+        user.change_date = new Date();
+        yield user.save();
         yield Prize_1.default.updateMany({ _id: { $in: user.prizes } }, { payed: true });
         res.redirect(303, "/users/find/all/ndfl");
     }

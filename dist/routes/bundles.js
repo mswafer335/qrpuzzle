@@ -101,6 +101,7 @@ router.get("/find/id", auth_1.default, (req, res) => __awaiter(void 0, void 0, v
                 });
             }
         }
+        bundle.prizes.sort((a, b) => a.ActivationDate > b.ActivationDate ? 1 : -1);
         return res.json(bundle);
     }
     catch (error) {

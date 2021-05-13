@@ -29,7 +29,7 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 // get single bundle
 router.get("/find/id", auth, async (req: Request, res: Response) => {
   try {
-    console.log()
+    console.log();
     const bundle = await Bundle.findOne({ _id: req.query.id }).populate({
       path: "prizes",
       populate: { path: "player" },
@@ -70,6 +70,9 @@ router.get("/find/id", auth, async (req: Request, res: Response) => {
         });
       }
     }
+    bundle.prizes.sort((a: any, b: any) =>
+      a.ActivationDate > b.ActivationDate ? 1 : -1
+    );
     return res.json(bundle);
   } catch (error) {
     console.error(error);

@@ -8,6 +8,7 @@ import admin_route from "./routes/management";
 import payment_route from "./routes/payment";
 import * as dotenv from "dotenv";
 import newStat from "./middleware/newStat";
+import expiration_check from "./middleware/expiration_check";
 dotenv.config();
 const app: Application = express();
 
@@ -32,4 +33,10 @@ const StatChecker = async () => {
   await newStat();
   setTimeout(StatChecker, 1000 * 60 * 60 * 3);
 };
+const ExpireCheck = async () => {
+  await expiration_check();
+  setTimeout(ExpireCheck, 1000 * 60 * 60 * 1);
+};
+
 StatChecker();
+ExpireCheck();
