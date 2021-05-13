@@ -166,6 +166,7 @@ router.get("/stats/week", auth, async (req, res) => {
 // add comment
 router.put("/comment/:id", async (req: Request, res: Response) => {
   try {
+    console.log(req.params.id)
     const user = await Player.findOne({ _id: req.params.id });
     if (!user) {
       return res
