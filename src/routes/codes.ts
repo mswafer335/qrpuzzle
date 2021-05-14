@@ -40,6 +40,10 @@ const transporter = nodemailer.createTransport({
   debug: true,
 });
 
+function regexEscape(str: string) {
+  return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+}
+
 // check QR
 router.get("/qr/:qr", async (req: Request, res: Response) => {
   try {
@@ -264,21 +268,21 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
     let codes = await Prize.find(PRIZE_QUERY).populate("player");
     if (req.query.fullname) {
       // @ts-ignore:
-      const regex = new RegExp(req.query.fullname);
+      const regex = new RegExp(regexEscape(req.query.fullname));
       codes = codes.filter((el) => {
         return el.player && regex.test(el.player.fullname);
       });
     }
     if (req.query.phone) {
       // @ts-ignore:
-      const regex = new RegExp(req.query.phone);
+      const regex = new RegExp(regexEscape(req.query.phone));
       codes = codes.filter((el) => {
         return el.player && regex.test(el.player.phone);
       });
     }
     if (req.query.email) {
       // @ts-ignore:
-      const regex = new RegExp(req.query.email);
+      const regex = new RegExp(regexEscape(req.query.email));
       codes = codes.filter((el) => {
         return el.player && regex.test(el.player.email);
       });
@@ -326,14 +330,14 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
       .sort({ activation_date: -1 });
     if (req.query.fullname) {
       // @ts-ignore:
-      const regex = new RegExp(req.query.fullname);
+      const regex = new RegExp(regexEscape(req.query.fullname));
       codes = codes.filter((el) => {
         return el.player && regex.test(el.player.fullname);
       });
     }
     if (req.query.phone) {
       // @ts-ignore:
-      const regex = new RegExp(req.query.phone);
+      const regex = new RegExp(regexEscape(req.query.phone));
       codes = codes.filter((el) => {
         return el.player && regex.test(el.player.phone);
       });
