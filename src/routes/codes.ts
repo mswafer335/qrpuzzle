@@ -276,6 +276,13 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
         return el.player && regex.test(el.player.phone);
       });
     }
+    if (req.query.email) {
+      // @ts-ignore:
+      const regex = new RegExp(req.query.email);
+      codes = codes.filter((el) => {
+        return el.player && regex.test(el.player.email);
+      });
+    }
     res.json(codes);
   } catch (error) {
     console.error(error);
