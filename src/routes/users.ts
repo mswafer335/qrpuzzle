@@ -38,7 +38,11 @@ router.get("/find/query", auth, async (req: Request, res: Response) => {
     const a: any = req.query;
     console.log(req.query)
     const query: any = {};
-    query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
+    let keys:string[] = Object.keys(req.query)
+    if(keys.length>0){
+      query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
+      if(req.query.field === "phone"){ query.phone = Number(query.phone)}
+    }
     const user = await Player.find(query)
       .populate("prizes")
       .sort({ change_date: -1 });
