@@ -246,6 +246,7 @@ router.put("/pay/:id", auth, async (req: Request, res: Response) => {
 // get all claimed prizes
 router.get("/find/claimed", auth, async (req: Request, res: Response) => {
   try {
+    console.log(req.query)
     const keys = Object.keys(req.query);
     const PRIZE_QUERY: any = {
       player: { $ne: undefined },
@@ -282,7 +283,7 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
     }
     if (req.query.email) {
       // @ts-ignore:
-      const regex = new RegExp(regexEscape(req.query.email));
+      const regex = new RegExp(regexEscape(req.query.email,"g"));
       codes = codes.filter((el) => {
         return el.player && regex.test(el.player.email);
       });
