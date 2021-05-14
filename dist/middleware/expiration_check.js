@@ -38,6 +38,7 @@ module.exports = () => __awaiter(void 0, void 0, void 0, function* () {
         const prizes = yield Prize_1.default.find({
             expired: { $ne: true },
             ActivationDate: { $ne: undefined },
+            payed: { $ne: true },
         });
         const date = new Date();
         for (const prize of prizes) {

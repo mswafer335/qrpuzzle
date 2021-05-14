@@ -124,34 +124,32 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!luhnAlgorithm(req.body.card)) {
             return res.status(400).json({ err: "Введена неверная карта" });
         }
-        // const response: any = {};
-        // await callbackWallet.toCard(
-        //   {
-        //     amount: prize.value,
-        //     comment: "Выигрыш кода QR пазла",
-        //     account: req.body.card,
-        //   },
-        //   async (err: any, data: any) => {
-        //     if (err || data === undefined) {
-        //       prize.payed = false;
-        //       console.log("err", err);
-        //       const response: any = {};
-        //       response.msg = "Что-то пошло не так";
-        //       response.payed = false;
-        //       await prize.save();
-        //       return res.status(400).json(response);
-        //     } else {
-        yield Player_1.default.findOneAndUpdate({ prizes: prize._id }, { change_date: new Date() });
-        prize.payed = true;
-        // console.log("data", data);
         const response = {};
-        response.msg = "Оплата прошла?";
-        response.payed = true;
-        yield prize.save();
-        return res.json(response);
-        //   }
-        // }
-        // );
+        yield callbackWallet.toCard({
+            amount: prize.value,
+            comment: "Выигрыш кода QR пазла",
+            account: req.body.card,
+        }, (err, data) => __awaiter(void 0, void 0, void 0, function* () {
+            if (err || data === undefined) {
+                prize.payed = false;
+                console.log("err", err);
+                // const response: any = {};
+                response.msg = "Что-то пошло не так";
+                response.payed = false;
+                yield prize.save();
+                return res.status(400).json(response);
+            }
+            else {
+                yield Player_1.default.findOneAndUpdate({ prizes: prize._id }, { change_date: new Date() });
+                prize.payed = true;
+                console.log("data", data);
+                // const response: any = {};
+                response.msg = "Оплата прошла?";
+                response.payed = true;
+                yield prize.save();
+                return res.json(response);
+            }
+        }));
     }
     catch (error) {
         console.error(error);

@@ -180,6 +180,7 @@ router.get("/stats/week", auth_1.default, (req, res) => __awaiter(void 0, void 0
 // add comment
 router.put("/comment/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log(req.params.id);
         const user = yield Player_1.default.findOne({ _id: req.params.id });
         if (!user) {
             return res
@@ -188,6 +189,7 @@ router.put("/comment/:id", (req, res) => __awaiter(void 0, void 0, void 0, funct
         }
         user.comment = req.body.comment;
         yield user.save();
+        res.json({ msg: "Комментарий добавлен" });
     }
     catch (error) {
         console.error(error);

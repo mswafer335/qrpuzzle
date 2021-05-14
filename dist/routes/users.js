@@ -62,8 +62,15 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
 router.get("/find/query", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const a = req.query;
+        console.log(req.query);
         const query = {};
-        query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
+        const keys = Object.keys(req.query);
+        if (keys.length > 0) {
+            query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
+            if (req.query.field === "phone") {
+                query.phone = Number(query.phone);
+            }
+        }
         const user = yield Player_1.default.find(query)
             .populate("prizes")
             .sort({ change_date: -1 });

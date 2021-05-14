@@ -40,8 +40,13 @@ router.get("/find/query", auth, async (req: Request, res: Response) => {
     const query: any = {};
     let keys:string[] = Object.keys(req.query)
     if(keys.length>0){
-      query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
-      if(req.query.field === "phone"){ query.phone = Number(query.phone)}
+      for(let key of keys){
+        if(key!=="phone"){
+          query[key] = { $regex: regexEscape(a[key]), $options: "i" }
+        }
+      }
+      // query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
+      if(req.query.phone){ query.phone = Number(req.query.phone)}
     }
     const user = await Player.find(query)
       .populate("prizes")
