@@ -36,6 +36,7 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 router.get("/find/query", auth, async (req: Request, res: Response) => {
   try {
     const a: any = req.query;
+    console.log(req.query)
     const query: any = {};
     query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
     const user = await Player.find(query)
