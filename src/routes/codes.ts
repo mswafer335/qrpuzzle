@@ -285,6 +285,8 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
       // @ts-ignore:
       const regex = new RegExp(regexEscape(req.query.email,"g"));
       codes = codes.filter((el) => {
+        console.log(el.player.email)
+        console.log(req.query.email)
         return el.player && regex.test(el.player.email);
       });
     }
