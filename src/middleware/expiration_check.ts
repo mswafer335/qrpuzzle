@@ -7,6 +7,7 @@ export = async () => {
     const prizes = await Prize.find({
       expired: { $ne: true },
       ActivationDate: { $ne: undefined },
+      payed: { $ne: true },
     });
     const date = new Date();
     for (const prize of prizes) {

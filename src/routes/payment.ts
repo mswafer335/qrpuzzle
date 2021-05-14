@@ -113,37 +113,37 @@ router.put("/card", async (req: Request, res: Response) => {
     if (!luhnAlgorithm(req.body.card)) {
       return res.status(400).json({ err: "Введена неверная карта" });
     }
-    // const response: any = {};
-    // await callbackWallet.toCard(
-    //   {
-    //     amount: prize.value,
-    //     comment: "Выигрыш кода QR пазла",
-    //     account: req.body.card,
-    //   },
-    //   async (err: any, data: any) => {
-    //     if (err || data === undefined) {
-    //       prize.payed = false;
-    //       console.log("err", err);
-    //       const response: any = {};
-    //       response.msg = "Что-то пошло не так";
-    //       response.payed = false;
-    //       await prize.save();
-    //       return res.status(400).json(response);
-    //     } else {
-    await Player.findOneAndUpdate(
-      { prizes: prize._id },
-      { change_date: new Date() }
-    );
-    prize.payed = true;
-    // console.log("data", data);
     const response: any = {};
-    response.msg = "Оплата прошла?";
-    response.payed = true;
-    await prize.save();
-    return res.json(response);
-    //   }
-    // }
-    // );
+    await callbackWallet.toCard(
+      {
+        amount: prize.value,
+        comment: "Выигрыш кода QR пазла",
+        account: req.body.card,
+      },
+      async (err: any, data: any) => {
+        if (err || data === undefined) {
+          prize.payed = false;
+          console.log("err", err);
+          const response: any = {};
+          response.msg = "Что-то пошло не так";
+          response.payed = false;
+          await prize.save();
+          return res.status(400).json(response);
+        } else {
+          await Player.findOneAndUpdate(
+            { prizes: prize._id },
+            { change_date: new Date() }
+          );
+          prize.payed = true;
+          console.log("data", data);
+          const response: any = {};
+          response.msg = "Оплата прошла?";
+          response.payed = true;
+          await prize.save();
+          return res.json(response);
+        }
+      }
+    );
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });

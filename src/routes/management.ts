@@ -175,6 +175,7 @@ router.put("/comment/:id", async (req: Request, res: Response) => {
     }
     user.comment = req.body.comment;
     await user.save();
+    res.json({msg:"Комментарий добавлен"})
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });
