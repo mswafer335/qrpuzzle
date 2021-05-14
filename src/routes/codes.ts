@@ -262,7 +262,7 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
       }
     }
     for (const key of keys) {
-      if (key !== "fullname" && key !== "phone") {
+      if (key !== "fullname" && key !== "phone" && key !== "email") {
         PRIZE_QUERY[key] = req.query[key];
       }
     }
@@ -283,10 +283,8 @@ router.get("/find/claimed", auth, async (req: Request, res: Response) => {
     }
     if (req.query.email) {
       // @ts-ignore:
-      const regex = new RegExp(regexEscape(req.query.email,"g"));
+      const regex = new RegExp(regexEscape(req.query.email));
       codes = codes.filter((el) => {
-        console.log(el.player.email)
-        console.log(req.query.email)
         return el.player && regex.test(el.player.email);
       });
     }
