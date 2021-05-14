@@ -124,7 +124,7 @@ router.put("/card", async (req: Request, res: Response) => {
         if (err || data === undefined) {
           prize.payed = false;
           console.log("err", err);
-          const response: any = {};
+          // const response: any = {};
           response.msg = "Что-то пошло не так";
           response.payed = false;
           await prize.save();
@@ -136,7 +136,7 @@ router.put("/card", async (req: Request, res: Response) => {
           );
           prize.payed = true;
           console.log("data", data);
-          const response: any = {};
+          // const response: any = {};
           response.msg = "Оплата прошла?";
           response.payed = true;
           await prize.save();
