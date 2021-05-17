@@ -116,6 +116,12 @@ router.put("/win/:qr", async (req: Request, res: Response) => {
         .status(400)
         .json({ err: "Неверный код валидации", status: false });
     }
+    if (prize.player) {
+      return res.status(404).json({
+        err: "Указанный валидационный код уже привязан к пользователю",
+        status: false,
+      });
+    }
     if (prize.validated === true) {
       return res.status(404).json({
         err: "Указанный валидационный код уже использован",
@@ -158,8 +164,11 @@ router.put("/claim", async (req: Request, res: Response) => {
   try {
     let user = await Player.findOne({ phone: req.body.phone });
     const code = await Prize.findOne({ code: req.body.code.toLowerCase() });
-    if (!code || code.player) {
+    if (!code) {
       return res.status(400).json({ err: "Код невалиден" });
+    }
+    if (code.player) {
+      return res.status(400).json({ err: "Код уже был привязан к пользователю" });
     }
     const date = new Date();
     if (Number(date) - Number(code.ActivationDate) > 604800000) {
