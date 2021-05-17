@@ -166,6 +166,7 @@ router.put("/win/:qr", async (req: Request, res: Response) => {
 // claim prize
 router.put("/claim", async (req: Request, res: Response) => {
   try {
+    console.log(req.body)
     let user = await Player.findOne({ phone: req.body.phone });
     const code = await Prize.findOne({ code: req.body.code.toLowerCase() });
     if (!code) {
