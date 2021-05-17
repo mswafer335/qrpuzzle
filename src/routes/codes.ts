@@ -86,7 +86,7 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
         approve: true,
         code: qr.prize.code,
         phone: true,
-        totalSum: qr.prize.player.prize_sum,
+        totalSum: qr.prize.value > 4000 ? qr.prize.player.prize_sum : undefined,
         count: qr.prize.player.prizes_activated,
       };
 
@@ -166,7 +166,6 @@ router.put("/win/:qr", async (req: Request, res: Response) => {
 // claim prize
 router.put("/claim", async (req: Request, res: Response) => {
   try {
-    console.log(req.body)
     let user = await Player.findOne({ phone: req.body.phone });
     const code = await Prize.findOne({ code: req.body.code.toLowerCase() });
     if (!code) {
