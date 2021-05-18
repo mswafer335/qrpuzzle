@@ -70,9 +70,9 @@ router.get("/find/id", auth, async (req: Request, res: Response) => {
         });
       }
     }
-    bundle.prizes.sort((a: any, b: any) =>
-      a.ActivationDate > b.ActivationDate ? 1 : -1
-    );
+    bundle.prizes.sort((a: any, b: any) => {
+      return a.ActivationDate - b.ActivationDate;
+    });
     return res.json(bundle);
   } catch (error) {
     console.error(error);

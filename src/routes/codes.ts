@@ -65,7 +65,7 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
     if (
       qr.prize &&
       qr.prize.ActivationDate &&
-      Number(date) - Number(qr.prize.ActivationDate) > 604800000
+      Number(date) - Number(qr.prize.ActivationDate) > 604800000 / 7 / 24
     ) {
       return res
         .status(400)
@@ -86,7 +86,10 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
         approve: true,
         code: qr.prize.code,
         phone: true,
-        totalSum: qr.prize.value > 4000 ? qr.prize.player.prize_sum : undefined,
+        totalSum:
+          qr.prize.player.prize_sum > 4000
+            ? qr.prize.player.prize_sum
+            : undefined,
         count: qr.prize.player.prizes_activated,
       };
 
@@ -172,7 +175,9 @@ router.put("/claim", async (req: Request, res: Response) => {
       return res.status(400).json({ err: "Код невалиден" });
     }
     if (code.player) {
-      return res.status(400).json({ err: "Код уже был привязан к пользователю" });
+      return res
+        .status(400)
+        .json({ err: "Код уже был привязан к пользователю" });
     }
     const date = new Date();
     if (Number(date) - Number(code.ActivationDate) > 604800000) {
@@ -193,7 +198,7 @@ router.put("/claim", async (req: Request, res: Response) => {
     user.prizes_activated += 1;
     user.prizes.push(code);
     user.prize_sum += code.value;
-    user.change_date = new Date()
+    user.change_date = new Date();
     const response: any = { value: code.value, count: user.prizes_activated };
     if (user.prize_sum <= 4000) {
       user.sum_ndfl = user.prize_sum;
@@ -242,8 +247,8 @@ router.put("/pay/:id", auth, async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ err: "Код не найден" });
     }
-    user.change_date = new Date()
-    await user.save()
+    user.change_date = new Date();
+    await user.save();
     await Prize.updateMany({ _id: { $in: user.prizes } }, { payed: true });
     res.redirect(303, "/users/find/all/ndfl");
   } catch (error) {
@@ -255,7 +260,7 @@ router.put("/pay/:id", auth, async (req: Request, res: Response) => {
 // get all claimed prizes
 router.get("/find/claimed", auth, async (req: Request, res: Response) => {
   try {
-    console.log(req.query)
+    console.log(req.query);
     const keys = Object.keys(req.query);
     const PRIZE_QUERY: any = {
       player: { $ne: undefined },
