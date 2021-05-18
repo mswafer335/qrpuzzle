@@ -78,9 +78,9 @@ router.get("/find/id", auth, async (req: Request, res: Response) => {
       } else if (!b.ActivationDate && b.validated) {
         return -1;
       } else if (!a.ActivationDate) {
-        return -1;
-      } else if (!b.ActivationDate) {
         return 1;
+      } else if (!b.ActivationDate) {
+        return -1;
       } else {
         return 0;
       }
