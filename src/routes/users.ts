@@ -36,17 +36,19 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 router.get("/find/query", auth, async (req: Request, res: Response) => {
   try {
     const a: any = req.query;
-    console.log(req.query)
+    console.log(req.query);
     const query: any = {};
-    let keys:string[] = Object.keys(req.query)
-    if(keys.length>0){
-      for(let key of keys){
-        if(key!=="phone"){
-          query[key] = { $regex: regexEscape(a[key]), $options: "i" }
+    let keys: string[] = Object.keys(req.query);
+    if (keys.length > 0) {
+      for (let key of keys) {
+        if (key !== "phone") {
+          query[key] = { $regex: regexEscape(a[key]), $options: "i" };
         }
       }
       // query[a.field] = { $regex: regexEscape(a.value), $options: "i" };
-      if(req.query.phone){ query.phone = Number(req.query.phone)}
+      if (req.query.phone) {
+        query.phone = Number(req.query.phone);
+      }
     }
     const user = await Player.find(query)
       .populate("prizes")
@@ -66,13 +68,27 @@ router.get("/find/all/ndfl", auth, async (req: Request, res: Response) => {
       prize_sum: { $gt: Number(req.query.gt ? req.query.gt : 4000) },
     };
     for (const key of keys) {
-      if (key !== "gt") {
+      if (key !== "gt" && key != "payed") {
         QUERY_OBJ[key] = req.query[key];
       }
     }
-    const users = await Player.find(QUERY_OBJ)
+    let users = await Player.find(QUERY_OBJ)
       .populate("prizes")
       .sort({ change_date: -1 });
+    if (req.query.payed === "true") {
+      users = users.filter((user) => {
+        user.prizes.every((prize: IPrize) => {
+          prize.payed;
+        });
+      });
+    }
+    if (req.query.payed === "false") {
+      users = users.filter((user) => {
+        user.prizes.some((prize: IPrize) => {
+          !prize.payed;
+        });
+      });
+    }
     res.json(users);
   } catch (error) {
     console.error(error);
