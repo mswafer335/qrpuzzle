@@ -342,7 +342,7 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
     }
     let codes = await Prize.find(PRIZE_QUERY)
       .populate("player")
-      .sort({ activation_date: -1 });
+      .sort({ ActivationDate: -1 });
     if (req.query.fullname) {
       // @ts-ignore:
       const regex = new RegExp(regexEscape(req.query.fullname));
