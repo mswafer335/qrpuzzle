@@ -71,7 +71,7 @@ router.get("/find/id", auth, async (req: Request, res: Response) => {
       }
     }
     bundle.prizes.sort((a: any, b: any) => {
-      return a.ActivationDate - b.ActivationDate;
+      return a.ActivationDate? a.ActivationDate - b.ActivationDate : b.ActivationDate - a.ActivationDate
     });
     return res.json(bundle);
   } catch (error) {
