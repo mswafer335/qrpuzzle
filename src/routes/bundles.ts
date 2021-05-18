@@ -72,7 +72,7 @@ router.get("/find/id", auth, async (req: Request, res: Response) => {
     }
     bundle.prizes.sort((a: any, b: any) => {
       if (a.ActivationDate && b.ActivationDate) {
-        return a.ActivationDate - b.ActivationDate;
+        return b.ActivationDate - a.ActivationDate;
       } else if (!a.ActivationDate && a.validated) {
         return -1;
       } else if (!b.ActivationDate && b.validated) {
