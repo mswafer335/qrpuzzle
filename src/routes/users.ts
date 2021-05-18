@@ -78,14 +78,14 @@ router.get("/find/all/ndfl", auth, async (req: Request, res: Response) => {
     if (req.query.payed === "true") {
       users = users.filter((user) => {
         user.prizes.every((prize: IPrize) => {
-          prize.payed;
+          return prize.payed;
         });
       });
     }
     if (req.query.payed === "false") {
       users = users.filter((user) => {
         user.prizes.some((prize: IPrize) => {
-          !prize.payed;
+          return !prize.payed;
         });
       });
     }
