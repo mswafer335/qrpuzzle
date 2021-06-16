@@ -77,16 +77,9 @@ router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             return res.status(400).json({ err: "Оплата выше 4к так не работает" });
         }
         yield axios_1.default({
-            method: "post",
+            method: "get",
             url: process.env.API_URL_PHONE +
                 `alef_action=payment&apikey=${process.env.API_URL_PHONE}&phone_number=${req.body.phone}&amount=${prize.value}&is_demo=1`,
-            // data: {
-            //   alef_action: "payment",
-            //   apikey: process.env.API_KEY,
-            //   phone_number: req.body.phone,
-            //   amount: prize.value,
-            //   is_demo: 1,
-            // },
         })
             .then((response) => {
             console.log(response);
