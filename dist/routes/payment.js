@@ -38,6 +38,7 @@ dotenv.config({ path: __dirname + "/.env" });
 const node_qiwi_api_1 = require("node-qiwi-api");
 const Prize_1 = __importDefault(require("../models/Prize"));
 const Player_1 = __importDefault(require("../models/Player"));
+const axios_1 = __importDefault(require("axios"));
 const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
 const luhnAlgorithm = (digits) => {
@@ -67,33 +68,63 @@ router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (prize.payed) {
             return res.status(400).json({ err: "Указанный код уже был использован" });
         }
-        if (prize.value > 50) {
+        if (prize.value > 20) {
             return res.status(400).json({
-                err: "Коды суммой более 50 рублей нельзя использовать для пополнения счета телефона",
+                err: "Коды суммой более 20 рублей нельзя использовать для пополнения счета телефона",
             });
         }
         if (prize.player.prize_sum > 4000) {
             return res.status(400).json({ err: "Оплата выше 4к так не работает" });
         }
-        yield callbackWallet.toMobilePhone({
-            amount: prize.value,
-            comment: "Выигрыш кода QR пазла",
-            account: req.body.phone,
-        }, (err, data) => __awaiter(void 0, void 0, void 0, function* () {
-            if (err) {
+        yield axios_1.default({
+            method: "post",
+            url: process.env.API_URL_PHONE +
+                `alef_action=payment&apikey=${process.env.API_URL_PHONE}&phone_number=${req.body.phone}&amount=${prize.value}&is_demo=1`,
+            // data: {
+            //   alef_action: "payment",
+            //   apikey: process.env.API_KEY,
+            //   phone_number: req.body.phone,
+            //   amount: prize.value,
+            //   is_demo: 1,
+            // },
+        })
+            .then((response) => {
+            console.log(response);
+            if (response.status !== 0) {
                 prize.payed = false;
-                console.log("err", err);
-                yield prize.save();
-                return res.json({ msg: "Что-то пошло не так", payed: false });
+                res.json({ msg: "Что-то пошло не так", payed: false });
             }
             else {
-                yield Player_1.default.findOneAndUpdate({ prizes: prize._id }, { change_date: new Date() });
-                console.log("data", data);
                 prize.payed = true;
-                yield prize.save();
-                return res.json({ msg: "Деньги отправлены", payed: true });
+                res.json({ msg: "Деньги отправлены", payed: true });
+                return Player_1.default.findOneAndUpdate({ prizes: prize._id }, { change_date: new Date() });
             }
-        }));
+        })
+            .then(() => prize.save());
+        // await callbackWallet.toMobilePhone(
+        //   {
+        //     amount: prize.value,
+        //     comment: "Выигрыш кода QR пазла",
+        //     account: req.body.phone,
+        //   },
+        //   async (err: any, data: any) => {
+        //     if (err) {
+        //       prize.payed = false;
+        //       console.log("err", err);
+        //       await prize.save();
+        //       return res.json({ msg: "Что-то пошло не так", payed: false });
+        //     } else {
+        //       await Player.findOneAndUpdate(
+        //         { prizes: prize._id },
+        //         { change_date: new Date() }
+        //       );
+        //       console.log("data", data);
+        //       prize.payed = true;
+        //       await prize.save();
+        //       return res.json({ msg: "Деньги отправлены", payed: true });
+        //     }
+        //   }
+        // );
     }
     catch (error) {
         console.error(error);

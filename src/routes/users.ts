@@ -38,9 +38,9 @@ router.get("/find/query", auth, async (req: Request, res: Response) => {
     const a: any = req.query;
     console.log(req.query);
     const query: any = {};
-    let keys: string[] = Object.keys(req.query);
+    const keys: string[] = Object.keys(req.query);
     if (keys.length > 0) {
-      for (let key of keys) {
+      for (const key of keys) {
         if (key !== "phone") {
           query[key] = { $regex: regexEscape(a[key]), $options: "i" };
         }

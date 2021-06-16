@@ -69,6 +69,9 @@ const transporter = nodemailer_1.default.createTransport({
     logger: true,
     debug: true,
 });
+function regexEscape(str) {
+    return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+}
 // check QR
 router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -89,7 +92,7 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const date = new Date();
         if (qr.prize &&
             qr.prize.ActivationDate &&
-            Number(date) - Number(qr.prize.ActivationDate) > 604800000) {
+            Number(date) - Number(qr.prize.ActivationDate) > 604800000 / 7 / 24) {
             return res
                 .status(400)
                 .json({ err: "Истек срок годности кода", dateInvalid: true });
@@ -106,7 +109,9 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 approve: true,
                 code: qr.prize.code,
                 phone: true,
-                totalSum: qr.prize.player.prize_sum,
+                totalSum: qr.prize.player.prize_sum > 4000
+                    ? qr.prize.player.prize_sum
+                    : undefined,
                 count: qr.prize.player.prizes_activated,
             };
             return res.status(200).json(response);
@@ -138,6 +143,12 @@ router.put("/win/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function*
             return res
                 .status(400)
                 .json({ err: "Неверный код валидации", status: false });
+        }
+        if (prize.player) {
+            return res.status(404).json({
+                err: "Указанный валидационный код уже привязан к пользователю",
+                status: false,
+            });
         }
         if (prize.validated === true) {
             return res.status(404).json({
@@ -178,8 +189,13 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         let user = yield Player_1.default.findOne({ phone: req.body.phone });
         const code = yield Prize_1.default.findOne({ code: req.body.code.toLowerCase() });
-        if (!code || code.player) {
+        if (!code) {
             return res.status(400).json({ err: "Код невалиден" });
+        }
+        if (code.player) {
+            return res
+                .status(400)
+                .json({ err: "Код уже был привязан к пользователю" });
         }
         const date = new Date();
         if (Number(date) - Number(code.ActivationDate) > 604800000) {
@@ -263,6 +279,7 @@ router.put("/pay/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, v
 // get all claimed prizes
 router.get("/find/claimed", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log(req.query);
         const keys = Object.keys(req.query);
         const PRIZE_QUERY = {
             player: { $ne: undefined },
@@ -278,23 +295,30 @@ router.get("/find/claimed", auth_1.default, (req, res) => __awaiter(void 0, void
             }
         }
         for (const key of keys) {
-            if (key !== "fullname" && key !== "phone") {
+            if (key !== "fullname" && key !== "phone" && key !== "email") {
                 PRIZE_QUERY[key] = req.query[key];
             }
         }
         let codes = yield Prize_1.default.find(PRIZE_QUERY).populate("player");
         if (req.query.fullname) {
             // @ts-ignore:
-            const regex = new RegExp(req.query.fullname);
+            const regex = new RegExp(regexEscape(req.query.fullname));
             codes = codes.filter((el) => {
                 return el.player && regex.test(el.player.fullname);
             });
         }
         if (req.query.phone) {
             // @ts-ignore:
-            const regex = new RegExp(req.query.phone);
+            const regex = new RegExp(regexEscape(req.query.phone));
             codes = codes.filter((el) => {
                 return el.player && regex.test(el.player.phone);
+            });
+        }
+        if (req.query.email) {
+            // @ts-ignore:
+            const regex = new RegExp(regexEscape(req.query.email));
+            codes = codes.filter((el) => {
+                return el.player && regex.test(el.player.email);
             });
         }
         res.json(codes);
@@ -337,17 +361,17 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
         }
         let codes = yield Prize_1.default.find(PRIZE_QUERY)
             .populate("player")
-            .sort({ activation_date: -1 });
+            .sort({ ActivationDate: -1 });
         if (req.query.fullname) {
             // @ts-ignore:
-            const regex = new RegExp(req.query.fullname);
+            const regex = new RegExp(regexEscape(req.query.fullname));
             codes = codes.filter((el) => {
                 return el.player && regex.test(el.player.fullname);
             });
         }
         if (req.query.phone) {
             // @ts-ignore:
-            const regex = new RegExp(req.query.phone);
+            const regex = new RegExp(regexEscape(req.query.phone));
             codes = codes.filter((el) => {
                 return el.player && regex.test(el.player.phone);
             });

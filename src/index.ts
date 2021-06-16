@@ -9,6 +9,7 @@ import payment_route from "./routes/payment";
 import * as dotenv from "dotenv";
 import newStat from "./middleware/newStat";
 import expiration_check from "./middleware/expiration_check";
+import axios from "axios";
 dotenv.config();
 const app: Application = express();
 

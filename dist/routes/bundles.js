@@ -101,7 +101,26 @@ router.get("/find/id", auth_1.default, (req, res) => __awaiter(void 0, void 0, v
                 });
             }
         }
-        bundle.prizes.sort((a, b) => a.ActivationDate > b.ActivationDate ? 1 : -1);
+        bundle.prizes.sort((a, b) => {
+            if (a.ActivationDate && b.ActivationDate) {
+                return b.ActivationDate - a.ActivationDate;
+            }
+            else if (!a.ActivationDate && a.validated) {
+                return -1;
+            }
+            else if (!b.ActivationDate && b.validated) {
+                return 1;
+            }
+            else if (!a.ActivationDate) {
+                return 1;
+            }
+            else if (!b.ActivationDate) {
+                return -1;
+            }
+            else {
+                return 0;
+            }
+        });
         return res.json(bundle);
     }
     catch (error) {
