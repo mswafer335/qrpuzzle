@@ -42,6 +42,8 @@ const payment_1 = __importDefault(require("./routes/payment"));
 const dotenv = __importStar(require("dotenv"));
 const newStat_1 = __importDefault(require("./middleware/newStat"));
 const expiration_check_1 = __importDefault(require("./middleware/expiration_check"));
+const axios_1 = __importDefault(require("axios"));
+const crypto_1 = __importDefault(require("crypto"));
 dotenv.config();
 const app = express_1.default();
 db_1.connectDB();
@@ -67,4 +69,44 @@ const ExpireCheck = () => __awaiter(void 0, void 0, void 0, function* () {
 });
 StatChecker();
 ExpireCheck();
+const testFunc = () => __awaiter(void 0, void 0, void 0, function* () {
+    const sign = crypto_1.default
+        .createHmac("sha256", process.env.zingSecret)
+        .update(process.env.zingAcc)
+        .digest("hex");
+    yield axios_1.default({
+        method: "post",
+        url: `${process.env.zingUrl}/withdrawal/balance/get`,
+        data: {
+            account: process.env.zingAcc,
+        },
+        headers: {
+            MerchantKey: process.env.merchantKey,
+            Sign: sign,
+        },
+    }).then((response) => console.log(response.data));
+});
+// testFunc();
+const testFunc2 = () => __awaiter(void 0, void 0, void 0, function* () {
+    const body = {
+        account: process.env.zingAcc,
+        amount: 1000,
+        customer_card_number: "1111222233334444",
+    };
+    const signValue = `${body.account}|${body.amount}|${body.customer_card_number}`;
+    const sign = crypto_1.default
+        .createHmac("sha256", process.env.zingSecret)
+        .update(signValue)
+        .digest("hex");
+    yield axios_1.default({
+        method: "post",
+        url: `${process.env.zingUrl}/withdrawal/init`,
+        data: body,
+        headers: {
+            MerchantKey: process.env.merchantKey,
+            Sign: sign,
+        },
+    }).then((response) => console.log(response.data));
+});
+testFunc2();
 //# sourceMappingURL=index.js.map

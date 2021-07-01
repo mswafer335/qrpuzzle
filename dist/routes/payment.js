@@ -39,6 +39,7 @@ const node_qiwi_api_1 = require("node-qiwi-api");
 const Prize_1 = __importDefault(require("../models/Prize"));
 const Player_1 = __importDefault(require("../models/Player"));
 const axios_1 = __importDefault(require("axios"));
+const crypto_1 = __importDefault(require("crypto"));
 const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
 const luhnAlgorithm = (digits) => {
@@ -137,7 +138,7 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (prize.payed) {
             return res.status(400).json({ err: "Указанный код уже был использован" });
         }
-        if (prize.value < 50 || prize.value > 4000) {
+        if (prize.value < 20 || prize.value > 4000) {
             return res.status(400).json({
                 err: "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
             });
@@ -148,32 +149,55 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!luhnAlgorithm(req.body.card)) {
             return res.status(400).json({ err: "Введена неверная карта" });
         }
-        const response = {};
-        yield callbackWallet.toCard({
+        const body = {
+            account: process.env.zingAcc,
             amount: prize.value,
-            comment: "Выигрыш кода QR пазла",
-            account: req.body.card,
-        }, (err, data) => __awaiter(void 0, void 0, void 0, function* () {
-            if (err || data === undefined) {
-                prize.payed = false;
-                console.log("err", err);
-                // const response: any = {};
-                response.msg = "Что-то пошло не так";
-                response.payed = false;
-                yield prize.save();
-                return res.status(400).json(response);
-            }
-            else {
-                yield Player_1.default.findOneAndUpdate({ prizes: prize._id }, { change_date: new Date() });
-                prize.payed = true;
-                console.log("data", data);
-                // const response: any = {};
-                response.msg = "Оплата прошла?";
-                response.payed = true;
-                yield prize.save();
-                return res.json(response);
-            }
-        }));
+            customer_card_number: req.body.card,
+        };
+        const signValue = `${body.account}|${body.amount}|${body.customer_card_number}`;
+        const sign = crypto_1.default
+            .createHmac("sha256", process.env.zingSecret)
+            .update(signValue)
+            .digest()
+            .toString("base64");
+        yield axios_1.default({
+            method: "post",
+            url: `${process.env.zingUrl}/withdrawal/init`,
+            data: body,
+            headers: {
+                MerchantKey: process.env.merchantKey,
+                Sign: sign,
+            },
+        }).then((response) => console.log(response));
+        // await callbackWallet.toCard(
+        //   {
+        //     amount: prize.value,
+        //     comment: "Выигрыш кода QR пазла",
+        //     account: req.body.card,
+        //   },
+        //   async (err: any, data: any) => {
+        //     if (err || data === undefined) {
+        //       prize.payed = false;
+        //       console.log("err", err);
+        //       response.msg = "Что-то пошло не так";
+        //       response.payed = false;
+        //       await prize.save();
+        //       return res.status(400).json(response);
+        //     } else {
+        //       await Player.findOneAndUpdate(
+        //         { prizes: prize._id },
+        //         { change_date: new Date() }
+        //       );
+        //       prize.payed = true;
+        //       console.log("data", data);
+        //       // const response: any = {};
+        //       response.msg = "Оплата прошла?";
+        //       response.payed = true;
+        //       await prize.save();
+        //       return res.json(response);
+        //     }
+        //   }
+        // );
     }
     catch (error) {
         console.error(error);

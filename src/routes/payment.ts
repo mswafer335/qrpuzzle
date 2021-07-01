@@ -12,6 +12,7 @@ import Bundle from "../models/Bundle";
 import Player from "../models/Player";
 import auth from "../middleware/auth";
 import axios from "axios";
+import crypto from "crypto";
 
 const callbackWallet = new callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new asyncApi(process.env.QIWI_TOKEN);
@@ -122,7 +123,7 @@ router.put("/card", async (req: Request, res: Response) => {
     if (prize.payed) {
       return res.status(400).json({ err: "Указанный код уже был использован" });
     }
-    if (prize.value < 50 || prize.value > 4000) {
+    if (prize.value < 20 || prize.value > 4000) {
       return res.status(400).json({
         err: "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
       });
@@ -133,37 +134,73 @@ router.put("/card", async (req: Request, res: Response) => {
     if (!luhnAlgorithm(req.body.card)) {
       return res.status(400).json({ err: "Введена неверная карта" });
     }
-    const response: any = {};
-    await callbackWallet.toCard(
-      {
-        amount: prize.value,
-        comment: "Выигрыш кода QR пазла",
-        account: req.body.card,
+    let a: any;
+    let resp: any = {};
+    const body = {
+      account: process.env.zingAcc,
+      amount: prize.value*100,
+      customer_card_number: req.body.card,
+    };
+    const signValue: string = `${body.account}|${body.amount}|${body.customer_card_number}`;
+    const sign = crypto
+      .createHmac("sha256", process.env.zingSecret)
+      .update(signValue)
+      .digest("hex");
+    await axios({
+      method: "post",
+      url: `${process.env.zingUrl}/withdrawal/init`,
+      data: body,
+      headers: {
+        MerchantKey: process.env.merchantKey,
+        Sign: sign,
       },
-      async (err: any, data: any) => {
-        if (err || data === undefined) {
-          prize.payed = false;
-          console.log("err", err);
-          // const response: any = {};
-          response.msg = "Что-то пошло не так";
-          response.payed = false;
-          await prize.save();
-          return res.status(400).json(response);
-        } else {
-          await Player.findOneAndUpdate(
-            { prizes: prize._id },
-            { change_date: new Date() }
-          );
-          prize.payed = true;
-          console.log("data", data);
-          // const response: any = {};
-          response.msg = "Оплата прошла?";
-          response.payed = true;
-          await prize.save();
-          return res.json(response);
-        }
-      }
-    );
+    }).then((response) => (a = response));
+    if (a.data.err || a.data == undefined) {
+      prize.payed = false;
+      console.log("err", a.data);
+      resp.msg = "Что-то пошло не так";
+      resp.payed = false;
+      await prize.save();
+      return res.status(400).json(resp);
+    } else {
+      await Player.findOneAndUpdate(
+        { prizes: prize._id },
+        { $set: { change_date: new Date(), payed: true } }
+      );
+      console.log("data", a.data);
+      resp.msg = "Оплата прошла?";
+      resp.payed = true;
+      return res.json(resp);
+    }
+    // await callbackWallet.toCard(
+    //   {
+    //     amount: prize.value,
+    //     comment: "Выигрыш кода QR пазла",
+    //     account: req.body.card,
+    //   },
+    //   async (err: any, data: any) => {
+    //     if (err || data === undefined) {
+    //       prize.payed = false;
+    //       console.log("err", err);
+    //       response.msg = "Что-то пошло не так";
+    //       response.payed = false;
+    //       await prize.save();
+    //       return res.status(400).json(response);
+    //     } else {
+    //       await Player.findOneAndUpdate(
+    //         { prizes: prize._id },
+    //         { change_date: new Date() }
+    //       );
+    //       prize.payed = true;
+    //       console.log("data", data);
+    //       // const response: any = {};
+    //       response.msg = "Оплата прошла?";
+    //       response.payed = true;
+    //       await prize.save();
+    //       return res.json(response);
+    //     }
+    //   }
+    // );
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "server error" });

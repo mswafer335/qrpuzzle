@@ -10,6 +10,8 @@ import * as dotenv from "dotenv";
 import newStat from "./middleware/newStat";
 import expiration_check from "./middleware/expiration_check";
 import axios from "axios";
+import crypto from "crypto";
+import FormData from "form-data";
 dotenv.config();
 const app: Application = express();
 
