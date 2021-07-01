@@ -155,7 +155,7 @@ router.put("/card", async (req: Request, res: Response) => {
         Sign: sign,
       },
     }).then((response) => (a = response));
-    if (a.data.err || a.data == undefined) {
+    if (a.data.err || a.data === undefined) {
       prize.payed = false;
       console.log("err", a.data);
       resp.msg = "Что-то пошло не так";
