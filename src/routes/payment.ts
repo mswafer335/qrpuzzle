@@ -61,7 +61,7 @@ router.put("/phone", async (req: Request, res: Response) => {
       method: "get",
       url:
         process.env.API_URL_PHONE +
-        `alef_action=payment&apikey=${process.env.API_KEY}&phone_number=${req.body.phone}&amount=${prize.value}&is_demo=0`,
+        `alef_action=payment&apikey=${process.env.API_KEY}&phone_number=7${req.body.phone}&amount=${prize.value}&is_demo=0`,
     })
       .then((response) => {
         console.log(response);
