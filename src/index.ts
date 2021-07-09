@@ -6,6 +6,7 @@ import bundle_route from "./routes/bundles";
 import user_route from "./routes/users";
 import admin_route from "./routes/management";
 import payment_route from "./routes/payment";
+import shipment_route from "./routes/shipment";
 import * as dotenv from "dotenv";
 import newStat from "./middleware/newStat";
 import expiration_check from "./middleware/expiration_check";
@@ -28,6 +29,8 @@ app.use("/bundles", bundle_route);
 app.use("/users", user_route);
 app.use("/admin", admin_route);
 app.use("/pay", payment_route);
+app.use("/ship", shipment_route);
+
 
 const PORT = process.env.PORT || 1370;
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));

@@ -61,7 +61,7 @@ router.put("/phone", async (req: Request, res: Response) => {
       method: "get",
       url:
         process.env.API_URL_PHONE +
-        `alef_action=payment&apikey=${process.env.API_URL_PHONE}&phone_number=${req.body.phone}&amount=${prize.value}&is_demo=1`,
+        `alef_action=payment&apikey=${process.env.API_KEY}&phone_number=${req.body.phone}&amount=${prize.value}&is_demo=1`,
     })
       .then((response) => {
         console.log(response);
@@ -135,7 +135,7 @@ router.put("/card", async (req: Request, res: Response) => {
       return res.status(400).json({ err: "Введена неверная карта" });
     }
     let a: any;
-    let resp: any = {};
+    const resp: any = {};
     const body = {
       account: process.env.zingAcc,
       amount: prize.value*100,
