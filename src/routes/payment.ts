@@ -125,7 +125,7 @@ router.put("/card", async (req: Request, res: Response) => {
     }
     if (prize.value < 20 || prize.value > 4000) {
       return res.status(400).json({
-        err: "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
+        err: "Допустимый диапазон призов для вывода на карту - от 21 до 4000 рублей",
       });
     }
     if (prize.player.prize_sum > 4000) {

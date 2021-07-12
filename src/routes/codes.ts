@@ -504,7 +504,7 @@ router.post("/genold", auth, async (req: Request, res: Response) => {
 });
 
 /// gen chunk
-router.post("/generatecodes", async (req: Request, res: Response) => {
+router.post("/generatecodes", auth, async (req: Request, res: Response) => {
   try {
     let instruction: string;
     await imageToBase64(__dirname + "/../public/0001.jpg").then(

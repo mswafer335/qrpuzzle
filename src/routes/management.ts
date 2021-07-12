@@ -164,7 +164,7 @@ router.get("/stats/week", auth, async (req, res) => {
 });
 
 // add comment
-router.put("/comment/:id", async (req: Request, res: Response) => {
+router.put("/comment/:id", auth, async (req: Request, res: Response) => {
   try {
     console.log(req.params.id)
     const user = await Player.findOne({ _id: req.params.id });
@@ -182,19 +182,4 @@ router.put("/comment/:id", async (req: Request, res: Response) => {
   }
 });
 
-// count fix
-router.get("/kostil/fix", async (req: Request, res: Response) => {
-  try {
-    const users = await Player.find();
-    for (const user of users) {
-      user.prizes_activated = user.prizes.length;
-      await user.save();
-      console.log(user.prizes_activated);
-    }
-    return res.json("uspeh");
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ err: "server error" });
-  }
-});
 export default router;
