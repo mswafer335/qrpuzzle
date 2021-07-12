@@ -13,6 +13,7 @@ import Player from "../models/Player";
 import auth from "../middleware/auth";
 import axios from "axios";
 import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 
 const callbackWallet = new callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new asyncApi(process.env.QIWI_TOKEN);
@@ -138,10 +139,11 @@ router.put("/card", async (req: Request, res: Response) => {
     const resp: any = {};
     const body = {
       account: process.env.zingAcc,
-      amount: prize.value*100,
+      amount: prize.value * 100,
       customer_card_number: req.body.card,
+      order_id: uuidv4().replace("-", ""),
     };
-    const signValue: string = `${body.account}|${body.amount}|${body.customer_card_number}`;
+    const signValue: string = `${body.account}|${body.amount}|${body.customer_card_number}|${body.order_id}`;
     const sign = crypto
       .createHmac("sha256", process.env.zingSecret)
       .update(signValue)
