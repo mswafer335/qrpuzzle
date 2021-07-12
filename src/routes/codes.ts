@@ -510,22 +510,22 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
     await imageToBase64(__dirname + "/../public/0001.jpg").then(
       (response) => (instruction = response)
     );
-    let mainQR: string;
-    await QRCode.toDataURL("https://me-qr.com/202426", {
-      errorCorrectionLevel: "H",
-      type: "image/jpeg",
-      margin: 0.5,
-      color: {
-        dark: "#000000",
-        light: "#FAD620",
-      },
-    })
-      .then((url) => {
-        mainQR = url;
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+    // let mainQR: string;
+    // await QRCode.toDataURL("https://me-qr.com/202426", {
+    //   errorCorrectionLevel: "H",
+    //   type: "image/jpeg",
+    //   margin: 0.5,
+    //   color: {
+    //     dark: "#000000",
+    //     light: "#FAD620",
+    //   },
+    // })
+    //   .then((url) => {
+    //     mainQR = url;
+    //   })
+    //   .catch((err) => {
+    //     console.error(err);
+    //   });
     let date: any = new Date();
     date =
       date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
@@ -596,7 +596,7 @@ router.post("/generatecodes", async (req: Request, res: Response) => {
         doc.setTextColor("#FAD620");
         doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
         doc.addImage(instruction, "jpeg", 320, 5, 125, 310);
-        doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
+        // doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
         doc.text(CodePrint, 383, 192, null, "center");
         doc.rect(320, 5, 125, 310);
         const PrizeObj: IPrize = new Prize({
