@@ -597,7 +597,7 @@ router.post("/generatecodes", auth, async (req: Request, res: Response) => {
         doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
         doc.addImage(instruction, "jpeg", 320, 5, 125, 310);
         // doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
-        doc.text(CodePrint, 383, 191, null, "center");
+        doc.text(CodePrint, 383, 189, null, "center");
         doc.rect(320, 5, 125, 310);
         const PrizeObj: IPrize = new Prize({
           code: CodeFinal,
