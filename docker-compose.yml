@@ -12,10 +12,10 @@ services:
       - pdf:/app/dist/public/pdf
       - public:/app/dist/public
   mongo:
-    container_name: mongo_platform
+    container_name: mongo_qr
     restart: always
     image: mongo:4.1.8-xenial
-    # command: mongod --auth --config /data/configdb/mongodb.conf
+    command: mongod --auth --config /data/configdb/mongodb.conf
     ports: 
       - '27017:27017'
     volumes:
