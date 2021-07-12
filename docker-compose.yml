@@ -11,11 +11,19 @@ services:
       - archive:/app/dist/public/archive
       - pdf:/app/dist/public/pdf
       - public:/app/dist/public
+  mongo:
+    container_name: mongo_platform
+    restart: always
+    image: mongo:4.1.8-xenial
+    # command: mongod --auth --config /data/configdb/mongodb.conf
+    ports: 
+      - '27017:27017'
+    volumes:
+      - mongo-config:/data/configdb
+      - mongoData:/data/db            
 volumes: 
   archive:
   pdf:
   public:
-#networks:
- # default:
-  #  external:
-   #   name: buroplatform_default
+  mongo-config:
+  mongoData:

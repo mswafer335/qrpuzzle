@@ -65,7 +65,7 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
     if (
       qr.prize &&
       qr.prize.ActivationDate &&
-      Number(date) - Number(qr.prize.ActivationDate) > 604800000 / 7 / 24
+      Number(date) - Number(qr.prize.ActivationDate) > (1000 * 60 * 60 * 24 * 7)
     ) {
       return res
         .status(400)
