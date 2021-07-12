@@ -141,7 +141,7 @@ router.put("/card", async (req: Request, res: Response) => {
       account: process.env.zingAcc,
       amount: prize.value * 100,
       customer_card_number: req.body.card,
-      order_id: uuidv4().replace("-", ""),
+      order_id: uuidv4().replace("-", "").substring(0,31),
     };
     const signValue: string = `${body.account}|${body.amount}|${body.customer_card_number}|${body.order_id}`;
     const sign = crypto
