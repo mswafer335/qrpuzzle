@@ -135,29 +135,32 @@ router.put("/card", async (req: Request, res: Response) => {
     if (!luhnAlgorithm(req.body.card)) {
       return res.status(400).json({ err: "Введена неверная карта" });
     }
+    let login = await axios({
+      method: "post",
+      url: `${process.env.vintageUrl}/app/login`,
+      data: {
+        username: process.env.vintageLogin,
+        password: process.env.vintagePassword,
+      },
+    });
     let a: any;
     const resp: any = {};
     const body = {
-      account: process.env.zingAcc,
+      accountId: process.env.vintageAccountId,
+      method: "rub-card-1",
       amount: prize.value * 100,
-      customer_card_number: req.body.card,
-      order_id: uuidv4().replace("-", "").substring(0,31),
+      credentials: { cardNumber: req.body.card.toString() },
+      note: "Выигрыш Millionpuzzle",
     };
-    const signValue: string = `${body.account}|${body.amount}|${body.customer_card_number}|${body.order_id}`;
-    const sign = crypto
-      .createHmac("sha256", process.env.zingSecret)
-      .update(signValue)
-      .digest("hex");
     await axios({
       method: "post",
-      url: `${process.env.zingUrl}/withdrawal/init`,
+      url: `${process.env.vintageUrl}/app/withdrawalMoney`,
       data: body,
       headers: {
-        MerchantKey: process.env.merchantKey,
-        Sign: sign,
+        Token: login.data.token,
       },
     }).then((response) => (a = response));
-    if (a.data.err || a.data === undefined) {
+    if ((a.data.err && a.data.err !== "null") || a.data === undefined) {
       prize.payed = false;
       console.log("err", a.data);
       resp.msg = "Что-то пошло не так";

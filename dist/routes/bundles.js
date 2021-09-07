@@ -60,7 +60,6 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
 // get single bundle
 router.get("/find/id", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log();
         const bundle = yield Bundle_1.default.findOne({ _id: req.query.id }).populate({
             path: "prizes",
             populate: { path: "player" },

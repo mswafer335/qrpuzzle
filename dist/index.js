@@ -39,13 +39,15 @@ const bundles_1 = __importDefault(require("./routes/bundles"));
 const users_1 = __importDefault(require("./routes/users"));
 const management_1 = __importDefault(require("./routes/management"));
 const payment_1 = __importDefault(require("./routes/payment"));
+const shipment_1 = __importDefault(require("./routes/shipment"));
 const dotenv = __importStar(require("dotenv"));
 const newStat_1 = __importDefault(require("./middleware/newStat"));
 const expiration_check_1 = __importDefault(require("./middleware/expiration_check"));
-const axios_1 = __importDefault(require("axios"));
-const crypto_1 = __importDefault(require("crypto"));
 dotenv.config();
 const app = express_1.default();
+const socket_io_client_1 = __importDefault(require("socket.io-client"));
+// @ts-ignore
+const ioClient = socket_io_client_1.default.connect("http://185.231.153.99:5002");
 db_1.connectDB();
 app.use(cors_1.default());
 app.use(express_1.default.json());
@@ -57,6 +59,7 @@ app.use("/bundles", bundles_1.default);
 app.use("/users", users_1.default);
 app.use("/admin", management_1.default);
 app.use("/pay", payment_1.default);
+app.use("/ship", shipment_1.default);
 const PORT = process.env.PORT || 1370;
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
 const StatChecker = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -69,44 +72,5 @@ const ExpireCheck = () => __awaiter(void 0, void 0, void 0, function* () {
 });
 StatChecker();
 ExpireCheck();
-const testFunc = () => __awaiter(void 0, void 0, void 0, function* () {
-    const sign = crypto_1.default
-        .createHmac("sha256", process.env.zingSecret)
-        .update(process.env.zingAcc)
-        .digest("hex");
-    yield axios_1.default({
-        method: "post",
-        url: `${process.env.zingUrl}/withdrawal/balance/get`,
-        data: {
-            account: process.env.zingAcc,
-        },
-        headers: {
-            MerchantKey: process.env.merchantKey,
-            Sign: sign,
-        },
-    }).then((response) => console.log(response.data));
-});
-// testFunc();
-const testFunc2 = () => __awaiter(void 0, void 0, void 0, function* () {
-    const body = {
-        account: process.env.zingAcc,
-        amount: 1000,
-        customer_card_number: "1111222233334444",
-    };
-    const signValue = `${body.account}|${body.amount}|${body.customer_card_number}`;
-    const sign = crypto_1.default
-        .createHmac("sha256", process.env.zingSecret)
-        .update(signValue)
-        .digest("hex");
-    yield axios_1.default({
-        method: "post",
-        url: `${process.env.zingUrl}/withdrawal/init`,
-        data: body,
-        headers: {
-            MerchantKey: process.env.merchantKey,
-            Sign: sign,
-        },
-    }).then((response) => console.log(response.data));
-});
-testFunc2();
+ioClient.on("TEST", (msg) => console.log(msg));
 //# sourceMappingURL=index.js.map

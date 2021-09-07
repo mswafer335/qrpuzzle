@@ -178,7 +178,7 @@ router.get("/stats/week", auth_1.default, (req, res) => __awaiter(void 0, void 0
     }
 }));
 // add comment
-router.put("/comment/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put("/comment/:id", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log(req.params.id);
         const user = yield Player_1.default.findOne({ _id: req.params.id });
@@ -190,22 +190,6 @@ router.put("/comment/:id", (req, res) => __awaiter(void 0, void 0, void 0, funct
         user.comment = req.body.comment;
         yield user.save();
         res.json({ msg: "Комментарий добавлен" });
-    }
-    catch (error) {
-        console.error(error);
-        return res.status(500).json({ err: "server error" });
-    }
-}));
-// count fix
-router.get("/kostil/fix", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const users = yield Player_1.default.find();
-        for (const user of users) {
-            user.prizes_activated = user.prizes.length;
-            yield user.save();
-            console.log(user.prizes_activated);
-        }
-        return res.json("uspeh");
     }
     catch (error) {
         console.error(error);

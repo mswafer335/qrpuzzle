@@ -92,7 +92,7 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const date = new Date();
         if (qr.prize &&
             qr.prize.ActivationDate &&
-            Number(date) - Number(qr.prize.ActivationDate) > 604800000 / 7 / 24) {
+            Number(date) - Number(qr.prize.ActivationDate) > (1000 * 60 * 60 * 24 * 7)) {
             return res
                 .status(400)
                 .json({ err: "Истек срок годности кода", dateInvalid: true });
@@ -520,26 +520,26 @@ router.post("/genold", auth_1.default, (req, res) => __awaiter(void 0, void 0, v
     }
 }));
 /// gen chunk
-router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let instruction;
         yield image_to_base64_1.default(__dirname + "/../public/0001.jpg").then((response) => (instruction = response));
-        let mainQR;
-        yield qrcode_1.default.toDataURL("https://me-qr.com/202426", {
-            errorCorrectionLevel: "H",
-            type: "image/jpeg",
-            margin: 0.5,
-            color: {
-                dark: "#000000",
-                light: "#FAD620",
-            },
-        })
-            .then((url) => {
-            mainQR = url;
-        })
-            .catch((err) => {
-            console.error(err);
-        });
+        // let mainQR: string;
+        // await QRCode.toDataURL("https://me-qr.com/202426", {
+        //   errorCorrectionLevel: "H",
+        //   type: "image/jpeg",
+        //   margin: 0.5,
+        //   color: {
+        //     dark: "#000000",
+        //     light: "#FAD620",
+        //   },
+        // })
+        //   .then((url) => {
+        //     mainQR = url;
+        //   })
+        //   .catch((err) => {
+        //     console.error(err);
+        //   });
         let date = new Date();
         date =
             date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
@@ -608,8 +608,8 @@ router.post("/generatecodes", (req, res) => __awaiter(void 0, void 0, void 0, fu
                 doc.setTextColor("#FAD620");
                 doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
                 doc.addImage(instruction, "jpeg", 320, 5, 125, 310);
-                doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
-                doc.text(CodePrint, 383, 192, null, "center");
+                // doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
+                doc.text(CodePrint, 383, 189, null, "center");
                 doc.rect(320, 5, 125, 310);
                 const PrizeObj = new Prize_1.default({
                     code: CodeFinal,

@@ -40,6 +40,7 @@ const Prize_1 = __importDefault(require("../models/Prize"));
 const Player_1 = __importDefault(require("../models/Player"));
 const axios_1 = __importDefault(require("axios"));
 const crypto_1 = __importDefault(require("crypto"));
+const uuid_1 = require("uuid");
 const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
 const luhnAlgorithm = (digits) => {
@@ -80,7 +81,7 @@ router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         yield axios_1.default({
             method: "get",
             url: process.env.API_URL_PHONE +
-                `alef_action=payment&apikey=${process.env.API_URL_PHONE}&phone_number=${req.body.phone}&amount=${prize.value}&is_demo=1`,
+                `alef_action=payment&apikey=${process.env.API_KEY}&phone_number=7${req.body.phone}&amount=${prize.value}&is_demo=0`,
         })
             .then((response) => {
             console.log(response);
@@ -140,7 +141,7 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         if (prize.value < 20 || prize.value > 4000) {
             return res.status(400).json({
-                err: "Допустимый диапазон призов для вывода на карту - от 51 до 4000 рублей",
+                err: "Допустимый диапазон призов для вывода на карту - от 21 до 4000 рублей",
             });
         }
         if (prize.player.prize_sum > 4000) {
@@ -149,17 +150,19 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!luhnAlgorithm(req.body.card)) {
             return res.status(400).json({ err: "Введена неверная карта" });
         }
+        let a;
+        const resp = {};
         const body = {
             account: process.env.zingAcc,
-            amount: prize.value,
+            amount: prize.value * 100,
             customer_card_number: req.body.card,
+            order_id: uuid_1.v4().replace("-", "").substring(0, 31),
         };
-        const signValue = `${body.account}|${body.amount}|${body.customer_card_number}`;
+        const signValue = `${body.account}|${body.amount}|${body.customer_card_number}|${body.order_id}`;
         const sign = crypto_1.default
             .createHmac("sha256", process.env.zingSecret)
             .update(signValue)
-            .digest()
-            .toString("base64");
+            .digest("hex");
         yield axios_1.default({
             method: "post",
             url: `${process.env.zingUrl}/withdrawal/init`,
@@ -168,7 +171,22 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 MerchantKey: process.env.merchantKey,
                 Sign: sign,
             },
-        }).then((response) => console.log(response));
+        }).then((response) => (a = response));
+        if (a.data.err || a.data === undefined) {
+            prize.payed = false;
+            console.log("err", a.data);
+            resp.msg = "Что-то пошло не так";
+            resp.payed = false;
+            yield prize.save();
+            return res.status(400).json(resp);
+        }
+        else {
+            yield Player_1.default.findOneAndUpdate({ prizes: prize._id }, { $set: { change_date: new Date(), payed: true } });
+            console.log("data", a.data);
+            resp.msg = "Оплата прошла?";
+            resp.payed = true;
+            return res.json(resp);
+        }
         // await callbackWallet.toCard(
         //   {
         //     amount: prize.value,
