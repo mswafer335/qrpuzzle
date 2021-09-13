@@ -14,7 +14,8 @@ import auth from "../middleware/auth";
 import axios from "axios";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
-
+import lookup from "binlookup"
+let virtCheck = lookup();
 const callbackWallet = new callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new asyncApi(process.env.QIWI_TOKEN);
 const luhnAlgorithm = (digits: string) => {
@@ -134,6 +135,10 @@ router.put("/card", async (req: Request, res: Response) => {
     }
     if (!luhnAlgorithm(req.body.card)) {
       return res.status(400).json({ err: "Введена неверная карта" });
+    }
+    let qiwiCheck = await virtCheck(req.body.card)
+    if(qiwiCheck.bank.url==="www.qiwi.com"||qiwiCheck.bank.name.match(/qiwi/gi)){
+      return res.status(400).json({err:"Карты QIWI не поддерживаются"})
     }
     let login = await axios({
       method: "post",
