@@ -217,7 +217,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         user.prizes.push(code);
         user.prize_sum += code.value;
         user.change_date = new Date();
-        const response = { value: code.value, count: user.prizes_activated };
+        let response = { value: code.value, count: user.prizes_activated };
         if (user.prize_sum <= 4000) {
             user.sum_ndfl = user.prize_sum;
             response.msg = "Введите номер карты для перевода денег";
@@ -234,20 +234,21 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             const tax = num * 0.35;
             user.sum_ndfl = user.prize_sum - tax;
             user.tax_sum = tax;
-            // response = { value: code.value };
+            response = { value: code.value };
             response.msg = "Пользователь привязан, уведомление о НДФЛ отправлено";
             response.totalSum = user.prize_sum;
             // send email
-            // const mailOptions = {
-            //   from: process.env.SENDER_EMAIL,
-            //   to: process.env.RECEIVER_EMAIL,
-            //   subject: `<no-reply> Кто-то выиграл больше 4000 рублей`,
-            //   text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
-            // };
-            // transporter.sendMail(mailOptions, (err, info) => {
-            //   if (err) throw err;
-            //   console.log(info.response);
-            // });
+            const mailOptions = {
+                from: process.env.SENDER_EMAIL,
+                to: process.env.RECEIVER_EMAIL,
+                subject: `<no-reply> Выигрыш больше 4000 рублей`,
+                text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
+            };
+            transporter.sendMail(mailOptions, (err, info) => {
+                if (err)
+                    throw err;
+                console.log(info.response);
+            });
         }
         yield user.save();
         code.player = user;

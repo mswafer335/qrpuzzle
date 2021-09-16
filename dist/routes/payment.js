@@ -39,8 +39,8 @@ const node_qiwi_api_1 = require("node-qiwi-api");
 const Prize_1 = __importDefault(require("../models/Prize"));
 const Player_1 = __importDefault(require("../models/Player"));
 const axios_1 = __importDefault(require("axios"));
-const crypto_1 = __importDefault(require("crypto"));
-const uuid_1 = require("uuid");
+const binlookup_1 = __importDefault(require("binlookup"));
+const virtCheck = binlookup_1.default();
 const callbackWallet = new node_qiwi_api_1.callbackApi(process.env.QIWI_TOKEN);
 const asyncWallet = new node_qiwi_api_1.asyncApi(process.env.QIWI_TOKEN);
 const luhnAlgorithm = (digits) => {
@@ -150,29 +150,36 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!luhnAlgorithm(req.body.card)) {
             return res.status(400).json({ err: "Введена неверная карта" });
         }
+        const qiwiCheck = yield virtCheck(req.body.card);
+        if (qiwiCheck.bank.url === "www.qiwi.com" || qiwiCheck.bank.name.match(/qiwi/gi)) {
+            return res.status(400).json({ err: "Карты QIWI не поддерживаются" });
+        }
+        const login = yield axios_1.default({
+            method: "post",
+            url: `${process.env.vintageUrl}/app/login`,
+            data: {
+                username: process.env.vintageLogin,
+                password: process.env.vintagePassword,
+            },
+        });
         let a;
         const resp = {};
         const body = {
-            account: process.env.zingAcc,
+            accountId: process.env.vintageAccountId,
+            method: "rub-card-1",
             amount: prize.value * 100,
-            customer_card_number: req.body.card,
-            order_id: uuid_1.v4().replace("-", "").substring(0, 31),
+            credentials: { cardNumber: req.body.card.toString() },
+            note: "Выигрыш Millionpuzzle",
         };
-        const signValue = `${body.account}|${body.amount}|${body.customer_card_number}|${body.order_id}`;
-        const sign = crypto_1.default
-            .createHmac("sha256", process.env.zingSecret)
-            .update(signValue)
-            .digest("hex");
         yield axios_1.default({
             method: "post",
-            url: `${process.env.zingUrl}/withdrawal/init`,
+            url: `${process.env.vintageUrl}/app/withdrawalMoney`,
             data: body,
             headers: {
-                MerchantKey: process.env.merchantKey,
-                Sign: sign,
+                Token: login.data.token,
             },
         }).then((response) => (a = response));
-        if (a.data.err || a.data === undefined) {
+        if ((a.data.err && a.data.err !== "null") || a.data === undefined) {
             prize.payed = false;
             console.log("err", a.data);
             resp.msg = "Что-то пошло не так";

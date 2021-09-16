@@ -45,9 +45,6 @@ const newStat_1 = __importDefault(require("./middleware/newStat"));
 const expiration_check_1 = __importDefault(require("./middleware/expiration_check"));
 dotenv.config();
 const app = express_1.default();
-const socket_io_client_1 = __importDefault(require("socket.io-client"));
-// @ts-ignore
-const ioClient = socket_io_client_1.default.connect("http://185.231.153.99:5002");
 db_1.connectDB();
 app.use(cors_1.default());
 app.use(express_1.default.json());
@@ -72,5 +69,14 @@ const ExpireCheck = () => __awaiter(void 0, void 0, void 0, function* () {
 });
 StatChecker();
 ExpireCheck();
-ioClient.on("TEST", (msg) => console.log(msg));
+const binlookup_1 = __importDefault(require("binlookup"));
+const virtCheck = binlookup_1.default();
+const a = () => __awaiter(void 0, void 0, void 0, function* () {
+    const qiwiCheck = yield virtCheck(4890494710310137);
+    console.log(qiwiCheck);
+    if (qiwiCheck.bank.url === "www.qiwi.com" || qiwiCheck.bank.name.match(/qiwi/gi)) {
+        console.log({ err: "Карты QIWI не поддерживаются" });
+    }
+});
+a();
 //# sourceMappingURL=index.js.map
