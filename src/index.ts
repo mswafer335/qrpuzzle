@@ -51,9 +51,9 @@ ExpireCheck();
 import lookup from "binlookup"
 const virtCheck = lookup();
 const a = async()=>{
-  const qiwiCheck = await virtCheck(4890494710310137)
+  const qiwiCheck = await virtCheck(5536913887662159)
   console.log(qiwiCheck)
-  if(qiwiCheck.bank.url==="www.qiwi.com"||qiwiCheck.bank.name.match(/qiwi/gi)){
+  if((qiwiCheck.bank.url&&qiwiCheck.bank.name)&&(qiwiCheck.bank.url==="www.qiwi.com"||qiwiCheck.bank.name.match(/qiwi/gi))){
     console.log({err:"Карты QIWI не поддерживаются"})
   }
 }

@@ -72,9 +72,9 @@ ExpireCheck();
 const binlookup_1 = __importDefault(require("binlookup"));
 const virtCheck = binlookup_1.default();
 const a = () => __awaiter(void 0, void 0, void 0, function* () {
-    const qiwiCheck = yield virtCheck(4890494710310137);
+    const qiwiCheck = yield virtCheck(5536913887662159);
     console.log(qiwiCheck);
-    if (qiwiCheck.bank.url === "www.qiwi.com" || qiwiCheck.bank.name.match(/qiwi/gi)) {
+    if ((qiwiCheck.bank.url && qiwiCheck.bank.name) && (qiwiCheck.bank.url === "www.qiwi.com" || qiwiCheck.bank.name.match(/qiwi/gi))) {
         console.log({ err: "Карты QIWI не поддерживаются" });
     }
 });

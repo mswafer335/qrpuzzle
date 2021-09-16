@@ -151,6 +151,7 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return res.status(400).json({ err: "Введена неверная карта" });
         }
         const qiwiCheck = yield virtCheck(req.body.card);
+        console.log(qiwiCheck);
         if (qiwiCheck.bank.url === "www.qiwi.com" || qiwiCheck.bank.name.match(/qiwi/gi)) {
             return res.status(400).json({ err: "Карты QIWI не поддерживаются" });
         }
