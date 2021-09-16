@@ -138,7 +138,7 @@ router.put("/card", async (req: Request, res: Response) => {
     }
     const qiwiCheck = await virtCheck(req.body.card)
     console.log(qiwiCheck)
-    if(qiwiCheck.bank.url==="www.qiwi.com"||qiwiCheck.bank.name.match(/qiwi/gi)){
+    if((qiwiCheck.bank.url&&qiwiCheck.bank.name)&&(qiwiCheck.bank.url==="www.qiwi.com"||qiwiCheck.bank.name.match(/qiwi/gi))){
       return res.status(400).json({err:"Карты QIWI не поддерживаются"})
     }
     const login = await axios({
