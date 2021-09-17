@@ -66,10 +66,10 @@ router.put("/phone", async (req: Request, res: Response) => {
         `alef_action=payment&apikey=${process.env.API_KEY}&phone_number=7${req.body.phone}&amount=${prize.value}&is_demo=0`,
     })
       .then((response) => {
-        console.log(response);
-        if (response.status !== 0) {
+        console.log(response.data);
+        if (response.data.status !== 0) {
           prize.payed = false;
-          res.json({ msg: "Что-то пошло не так", payed: false });
+          res.status(400).json({ msg: "Что-то пошло не так", payed: false });
         } else {
           prize.payed = true;
           res.json({ msg: "Деньги отправлены", payed: true });

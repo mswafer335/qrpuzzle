@@ -57,6 +57,9 @@ router.get("/qr/:qr", async (req: Request, res: Response) => {
         .status(404)
         .json({ err: "Указанный QR код не найден", approve: false });
     }
+    if(qr.prize && qr.prize.payed){
+      return res.status(400).json({err:"Этот код уже был использован"})
+    }
     if (qr.validated === true && qr.prize && qr.prize.payed) {
       return res
         .status(400)
