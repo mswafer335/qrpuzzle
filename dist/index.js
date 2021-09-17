@@ -69,13 +69,35 @@ const ExpireCheck = () => __awaiter(void 0, void 0, void 0, function* () {
 });
 StatChecker();
 ExpireCheck();
-const binlookup_1 = __importDefault(require("binlookup"));
-const virtCheck = binlookup_1.default();
+const nodemailer_1 = __importDefault(require("nodemailer"));
+const transporter = nodemailer_1.default.createTransport({
+    service: "Gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    auth: {
+        user: process.env.SENDER_EMAIL,
+        pass: process.env.SENDER_PASSWORD,
+    },
+    logger: true,
+    debug: true,
+});
 const a = () => __awaiter(void 0, void 0, void 0, function* () {
-    const qiwiCheck = yield virtCheck(5536913887662159);
-    console.log(qiwiCheck);
-    if ((qiwiCheck.bank.url && qiwiCheck.bank.name) && (qiwiCheck.bank.url === "www.qiwi.com" || qiwiCheck.bank.name.match(/qiwi/gi))) {
-        console.log({ err: "Карты QIWI не поддерживаются" });
+    try {
+        const mailOptions = {
+            from: process.env.SENDER_EMAIL,
+            to: process.env.RECEIVER_EMAIL,
+            subject: `<no-reply> Test`,
+            text: `test`,
+        };
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err)
+                throw err;
+            console.log(info.response);
+        });
+    }
+    catch (error) {
+        console.error(error);
+        // return res.status(500).json({err:"server error"});
     }
 });
 a();

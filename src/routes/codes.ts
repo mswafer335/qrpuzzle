@@ -30,7 +30,8 @@ function makeid(length: number) {
   return result;
 }
 const transporter = nodemailer.createTransport({
-  service: "Yandex",
+  service: "Gmail",
+  host:"smtp.gmail.com",
   port: 465,
   auth: {
     user: process.env.SENDER_EMAIL,
