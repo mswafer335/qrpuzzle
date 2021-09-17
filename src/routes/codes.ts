@@ -224,7 +224,7 @@ router.put("/claim", async (req: Request, res: Response) => {
         from: process.env.SENDER_EMAIL,
         to: process.env.RECEIVER_EMAIL,
         subject: `<no-reply> Выигрыш больше 4000 рублей`,
-        text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
+        text: `Пользователь ${user.fullname}(email:${user.email}, телефон:${user.phone}}) активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
       };
       transporter.sendMail(mailOptions, (err, info) => {
         if (err) throw err;
