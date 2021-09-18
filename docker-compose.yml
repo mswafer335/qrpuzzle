@@ -5,8 +5,8 @@ services:
     restart: always
     build: .
     ports:
-      - '1370:1370'
-      - '465:465'
+      - '127.0.0.1:1370:1370'
+      - '127.0.0.1:465:465'
     volumes:
       - archive:/app/dist/public/archive
       - pdf:/app/dist/public/pdf
@@ -17,7 +17,7 @@ services:
     image: mongo:4.1.8-xenial
     command: mongod --auth --config /data/configdb/mongodb.conf
     ports: 
-      - '27017:27017'
+      - '127.0.0.1:27017:27017'
     volumes:
       - mongo-config:/data/configdb
       - mongoData:/data/db            
