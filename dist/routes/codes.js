@@ -60,7 +60,8 @@ function makeid(length) {
     return result;
 }
 const transporter = nodemailer_1.default.createTransport({
-    service: "Yandex",
+    service: "Gmail",
+    host: "smtp.gmail.com",
     port: 465,
     auth: {
         user: process.env.SENDER_EMAIL,
@@ -83,6 +84,9 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
             return res
                 .status(404)
                 .json({ err: "Указанный QR код не найден", approve: false });
+        }
+        if (qr.prize && qr.prize.payed) {
+            return res.status(400).json({ err: "Этот код уже был использован" });
         }
         if (qr.validated === true && qr.prize && qr.prize.payed) {
             return res
@@ -242,7 +246,7 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 from: process.env.SENDER_EMAIL,
                 to: process.env.RECEIVER_EMAIL,
                 subject: `<no-reply> Выигрыш больше 4000 рублей`,
-                text: `Пользователь ${user.fullname} активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
+                text: `Пользователь ${user.fullname}(email:${user.email}, телефон:${user.phone}}) активировал код на ${code.value} рублей, теперь сумма его выигрыша с учетом налогов составляет ${user.sum_ndfl}, размер налога составляет ${user.tax_sum} рублей`,
             };
             transporter.sendMail(mailOptions, (err, info) => {
                 if (err)

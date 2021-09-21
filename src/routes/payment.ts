@@ -158,6 +158,7 @@ router.put("/card", async (req: Request, res: Response) => {
       credentials: { cardNumber: req.body.card.toString() },
       note: "Выигрыш Millionpuzzle",
     };
+
     await axios({
       method: "post",
       url: `${process.env.vintageUrl}/app/withdrawalMoney`,
@@ -178,6 +179,8 @@ router.put("/card", async (req: Request, res: Response) => {
         { prizes: prize._id },
         { $set: { change_date: new Date(), payed: true } }
       );
+      prize.payed = true;
+      await prize.save()
       console.log("data", a.data);
       resp.msg = "Оплата прошла?";
       resp.payed = true;

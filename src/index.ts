@@ -46,34 +46,3 @@ const ExpireCheck = async () => {
 
 StatChecker();
 ExpireCheck();
-
-// import nodemailer from "nodemailer"
-// const transporter = nodemailer.createTransport({
-//   service: "Gmail",
-//   host:"smtp.gmail.com",
-//   port: 465,
-//   auth: {
-//     user: process.env.SENDER_EMAIL,
-//     pass: process.env.SENDER_PASSWORD,
-//   },
-//   logger: true,
-//   debug: true,
-// });
-// const a = async () =>{
-//   try{
-//     const mailOptions = {
-//       from: process.env.SENDER_EMAIL,
-//       to: process.env.RECEIVER_EMAIL,
-//       subject: `<no-reply> Test`,
-//       text: `test`,
-//     };
-//     transporter.sendMail(mailOptions, (err, info) => {
-//       if (err) throw err;
-//       console.log(info.response);
-//     });
-//   }catch(error){
-//     console.error(error);
-//     // return res.status(500).json({err:"server error"});
-//   }
-// }
-// a()

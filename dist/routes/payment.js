@@ -84,10 +84,10 @@ router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 `alef_action=payment&apikey=${process.env.API_KEY}&phone_number=7${req.body.phone}&amount=${prize.value}&is_demo=0`,
         })
             .then((response) => {
-            console.log(response);
-            if (response.status !== 0) {
+            console.log(response.data);
+            if (response.data.status !== 0) {
                 prize.payed = false;
-                res.json({ msg: "Что-то пошло не так", payed: false });
+                res.status(400).json({ msg: "Что-то пошло не так", payed: false });
             }
             else {
                 prize.payed = true;
@@ -190,6 +190,8 @@ router.put("/card", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         else {
             yield Player_1.default.findOneAndUpdate({ prizes: prize._id }, { $set: { change_date: new Date(), payed: true } });
+            prize.payed = true;
+            yield prize.save();
             console.log("data", a.data);
             resp.msg = "Оплата прошла?";
             resp.payed = true;
