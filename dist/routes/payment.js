@@ -70,11 +70,11 @@ router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (prize.payed) {
             return res.status(400).json({ err: "Указанный код уже был использован" });
         }
-        if (prize.value > 20) {
-            return res.status(400).json({
-                err: "Коды суммой более 20 рублей нельзя использовать для пополнения счета телефона",
-            });
-        }
+        // if (prize.value > 20) {
+        //   return res.status(400).json({
+        //     err: "Коды суммой более 20 рублей нельзя использовать для пополнения счета телефона",
+        //   });
+        // }
         if (prize.player.prize_sum > 4000) {
             return res.status(400).json({ err: "Оплата выше 4к так не работает" });
         }

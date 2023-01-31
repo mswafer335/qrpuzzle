@@ -50,6 +50,28 @@ const QR_urls_1 = __importDefault(require("../models/QR-urls"));
 const Bundle_1 = __importDefault(require("../models/Bundle"));
 const Player_1 = __importDefault(require("../models/Player"));
 const stats_1 = __importDefault(require("../middleware/stats"));
+const QRConfig = [
+    {
+        font: "sans",
+        size: 18,
+        y: 189,
+        color: "#FAD620",
+        instructionName: "0001.jpg",
+        margin: 5,
+        fill: "FD"
+    },
+    {
+        font: "Anton-Regular",
+        size: 20,
+        y: 284,
+        color: "#F20115",
+        instructionName: "sideNew1.jpg",
+        margin: 6,
+        fill: "S"
+    },
+];
+const canvasSize = [450, 320];
+const qrBorder = 10;
 function makeid(length) {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -224,11 +246,11 @@ router.put("/claim", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         let response = { value: code.value, count: user.prizes_activated };
         if (user.prize_sum <= 4000) {
             user.sum_ndfl = user.prize_sum;
-            response.msg = "Введите номер карты для перевода денег";
-            if (code.value <= 50) {
-                response.msg =
-                    "Введите номер телефона на счет которого перевести деньги";
-            }
+            // response.msg = "Введите номер карты для перевода денег";
+            // if (code.value <= 50) {
+            response.msg =
+                "Введите номер телефона на счет которого перевести деньги";
+            // }
             yield stats_1.default({
                 $inc: { PrizesClaimed: 1, WinningsClaimed: code.value },
             });
@@ -388,175 +410,34 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
         return res.status(500).json({ err: "server error" });
     }
 }));
-// generator
-router.post("/genold", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        let date = new Date();
-        date =
-            date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
-        let QRurl;
-        const QRNumber = req.body.count;
-        const price = req.body.price;
-        const archName = `${date}-${price.toString()}-${QRNumber}-${Math.random()
-            .toString(36)
-            .substr(2, 6)
-            .toLowerCase()}.zip`;
-        const filenameArray = [];
-        const output = fs_1.default.createWriteStream(__dirname + "/../public/archive/" + archName);
-        const archive = archiver_1.default("zip", {
-            zlib: { level: 6 },
-        });
-        archive.pipe(output);
-        archive.on("error", (err) => {
-            if (err)
-                throw err;
-        });
-        const QR_ARRAY = [];
-        const PRIZE_ARRAY = [];
-        const filename = Math.random().toString(36).substr(2, 6).toLowerCase() + ".pdf";
-        const file = __dirname + `/../public/pdf/${filename}`;
-        const doc = new jspdf_1.jsPDF({
-            orientation: "landscape",
-            unit: "mm",
-            format: [450, 320],
-            compress: false,
-        });
-        const func = (count) => __awaiter(void 0, void 0, void 0, function* () {
-            let ind = 1;
-            while (ind <= count) {
-                const code1 = Math.random().toString(36).substr(3, 4).toLowerCase();
-                const code2 = Math.random().toString(36).substr(3, 4).toLowerCase();
-                const code3 = Math.random().toString(36).substr(3, 4).toLowerCase();
-                const code4 = Date.now().toString(36).substr(4).toLowerCase();
-                const CodeFinal = code1 + code2 + code3 + code4;
-                const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
-                const QR_CODE = makeid(7) + Date.now().toString(36).substring(5);
-                const QRinput = process.env.win_url + QR_CODE;
-                yield qrcode_1.default.toDataURL(QRinput, {
-                    // errorCorrectionLevel: "H",
-                    type: "image/jpeg",
-                    // quality: 0.2,
-                    margin: 0.5,
-                    color: {
-                        dark: "#000000",
-                        light: "#ffdc00",
-                    },
-                })
-                    .then((url) => {
-                    QRurl = url;
-                })
-                    .catch((err) => {
-                    console.error(err);
-                });
-                if (ind > 1) {
-                    doc.addPage();
-                }
-                doc.addFileToVFS("sans.ttf", sans_1.font);
-                doc.addFont("sans.ttf", "sans", "normal");
-                doc.setFont("sans");
-                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
-                doc.rect(5, 5, 310, 310, "FD");
-                doc.setFillColor(0.02, 0.1, 1.0, 0.0);
-                doc.rect(320, 5, 125, 310, "FD");
-                // doc.setLineWidth(2);
-                // doc.rect(10, 10, 300, 300, "FD");
-                doc.setFontSize(23);
-                doc.text("Текст инструкции:", 335, 200);
-                doc.text("Тут будет инструкция", 335, 220);
-                doc.text("Валидационный код:", 335, 290);
-                doc.text(CodePrint, 335, 300);
-                doc.addImage(QRurl, "jpeg", 15, 15, 290, 290, "MEDIUM");
-                ind += 1;
-                const PrizeObj = new Prize_1.default({
-                    code: CodeFinal,
-                    value: price,
-                    validated: false,
-                    date: Date.now(),
-                    qr: undefined,
-                });
-                const QRObj = new QR_urls_1.default({ code: QR_CODE, url: QRinput });
-                QR_ARRAY.push(QRObj);
-                PRIZE_ARRAY.push(PrizeObj);
-            }
-        });
-        console.log("pre creation");
-        yield func(QRNumber);
-        // res.on("finish", async () => {
-        // });
-        console.log("post creation");
-        doc.save(file);
-        console.log("save");
-        archive.file(file, { name: filename });
-        console.log("post archive");
-        filenameArray.push(filename);
-        output.on("close", () => __awaiter(void 0, void 0, void 0, function* () {
-            const NewBundle = new Bundle_1.default({
-                amount: QRNumber,
-                date: new Date(),
-                value: price,
-                archive_path: `archive/${archName}`,
-                prizes: PRIZE_ARRAY,
-                qrs: QR_ARRAY,
-            });
-            yield NewBundle.save();
-            yield Prize_1.default.insertMany(PRIZE_ARRAY);
-            yield QR_urls_1.default.insertMany(QR_ARRAY);
-            res.json(NewBundle
-            // path.resolve(__dirname + `/../public/archive/` + archName),
-            // archName
-            );
-        }));
-        console.log("pre archive finalization");
-        yield archive.finalize();
-        console.log("post archive finalization");
-        const directory = __dirname + "/../public/pdf";
-        console.log("deletion");
-        for (const fuck of filenameArray) {
-            fs_1.default.unlink(path_1.default.join(directory, fuck), (err) => {
-                if (err)
-                    throw err;
-            });
-        }
-        console.log(path_1.default.resolve(__dirname + `/../public/archive/` + archName));
-    }
-    catch (error) {
-        console.error(error);
-        return res.status(500).json({ err: "server error" });
-    }
-}));
 /// gen chunk
-router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/generatecodes", 
+// auth,
+(req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const QRNumber = req.body.count;
+        const price = req.body.price;
+        const type = req.body.type;
+        if (type >= QRConfig.length)
+            return res.status(400).json({ err: "invalid type" });
+        const selectedConfig = QRConfig[type];
+        const { instructionName, font, size, y, color, margin, fill } = selectedConfig;
         let instruction;
-        yield image_to_base64_1.default(__dirname + "/../public/0001.jpg").then((response) => (instruction = response));
-        // let mainQR: string;
-        // await QRCode.toDataURL("https://me-qr.com/202426", {
-        //   errorCorrectionLevel: "H",
-        //   type: "image/jpeg",
-        //   margin: 0.5,
-        //   color: {
-        //     dark: "#000000",
-        //     light: "#FAD620",
-        //   },
-        // })
-        //   .then((url) => {
-        //     mainQR = url;
-        //   })
-        //   .catch((err) => {
-        //     console.error(err);
-        //   });
+        let bg;
+        yield image_to_base64_1.default(__dirname + `/../../${instructionName}`).then((response) => (instruction = response));
+        if (type === 1) {
+            yield image_to_base64_1.default(__dirname + "/../../bgNew.jpg").then((response) => (bg = response));
+        }
         let date = new Date();
         date =
             date.getFullYear() + "." + (date.getMonth() + 1) + "." + date.getDate();
         let QRurl;
-        const QRNumber = req.body.count;
-        const price = req.body.price;
         const archName = `${date}-${price.toString()}-${QRNumber}-${Math.random()
             .toString(36)
             .substr(2, 6)
             .toLowerCase()}.zip`;
         const filenameArray = [];
-        const output = fs_1.default.createWriteStream(__dirname + "/../public/archive/" + archName);
+        const output = fs_1.default.createWriteStream(path_1.default.normalize(__dirname + "/../public/archive/" + archName));
         const archive = archiver_1.default("zip", {
             zlib: { level: 6 },
         });
@@ -575,24 +456,25 @@ router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, vo
             const doc = new jspdf_1.jsPDF({
                 orientation: "landscape",
                 unit: "mm",
-                format: [450, 320],
+                format: canvasSize,
             });
+            const border = margin + 10;
             while (a <= num) {
                 const code1 = Math.random().toString(36).substr(3, 4).toLowerCase();
                 const code2 = Math.random().toString(36).substr(3, 4).toLowerCase();
                 const code3 = Math.random().toString(36).substr(3, 4).toLowerCase();
                 const code4 = Date.now().toString(36).substr(4).toLowerCase();
                 const CodeFinal = code1 + code2 + code3 + code4;
-                const CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
+                let CodePrint = code1 + "-" + code2 + "-" + code3 + "-" + code4;
                 const QR_CODE = makeid(7) + Date.now().toString(36).toUpperCase();
                 const QRinput = process.env.win_url + QR_CODE;
                 yield qrcode_1.default.toDataURL(QRinput, {
                     errorCorrectionLevel: "H",
-                    type: "image/jpeg",
+                    type: "image/png",
                     margin: 0.5,
                     color: {
                         dark: "#000000",
-                        light: "#FAD620",
+                        light: "#0000",
                     },
                 })
                     .then((url) => {
@@ -604,18 +486,25 @@ router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, vo
                 if (a > 1) {
                     doc.addPage();
                 }
-                doc.addFileToVFS("sans.ttf", sans_1.font);
-                doc.addFont("sans.ttf", "sans", "normal");
-                doc.setFont("sans");
+                doc.addFileToVFS(`${font}.ttf`, sans_1.fonts[type]);
+                doc.addFont(`${font}.ttf`, font, `normal`);
+                doc.setFont(font);
                 doc.setFillColor("#FAD620");
-                doc.rect(5, 5, 310, 310, "FD");
-                doc.setFontSize(18);
-                doc.setTextColor("#FAD620");
-                doc.addImage(QRurl, "jpeg", 15, 15, 290, 290);
-                doc.addImage(instruction, "jpeg", 320, 5, 125, 310);
+                if (bg) {
+                    doc.addImage(bg, "jpeg", margin, margin, canvasSize[1] - margin * 2, canvasSize[1] - margin * 2);
+                    CodePrint = CodePrint.toUpperCase();
+                }
+                // else {
+                //     doc.rect(5, 5, 310, 310, "FD");
+                // }
+                doc.rect(margin, margin, canvasSize[1] - margin * 2, canvasSize[1] - margin * 2, fill);
+                doc.setFontSize(size);
+                doc.setTextColor(color);
+                doc.addImage(QRurl, "png", border, border, canvasSize[1] - border * 2, canvasSize[1] - border * 2);
+                doc.addImage(instruction, "jpeg", 315 + margin, margin, 135 - margin * 2, 320 - margin * 2);
                 // doc.addImage(mainQR, "jpeg", 343.8, 226.5, 77.4, 73.5);
-                doc.text(CodePrint, 383, 189, null, "center");
-                doc.rect(320, 5, 125, 310);
+                doc.text(CodePrint, 383, y, null, "center");
+                doc.rect(315 + margin, margin, 135 - margin * 2, 320 - margin * 2);
                 const PrizeObj = new Prize_1.default({
                     code: CodeFinal,
                     value: price,
