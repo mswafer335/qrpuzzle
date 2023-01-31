@@ -7,23 +7,23 @@ services:
     ports:
       - '127.0.0.1:1370:1370'
       - '127.0.0.1:465:465'
-    # volumes:
-    #   - archive:/app/dist/public/archive
-    #   - pdf:/app/dist/public/pdf
-    #   - public:/app/dist/public
+    volumes:
+      - archive:/app/dist/public/archive
+      - pdf:/app/dist/public/pdf
+      - public:/app/dist/public
   mongo:
     container_name: mongo_qr
     restart: always
     image: mongo:4.1.8-xenial
-    command: mongod #--auth --config /data/configdb/mongodb.conf
+    command: mongod --auth --config /data/configdb/mongodb.conf
     ports: 
       - '127.0.0.1:27017:27017'
-#     volumes:
-#       - mongo-config:/data/configdb
-#       - mongoData:/data/db            
-# volumes: 
-#   archive:
-#   pdf:
-#   public:
-#   mongo-config:
-#   mongoData:
+    volumes:
+      - mongo-config:/data/configdb
+      - mongoData:/data/db            
+volumes: 
+  archive:
+  pdf:
+  public:
+  mongo-config:
+  mongoData:
