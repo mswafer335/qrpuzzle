@@ -71,7 +71,6 @@ const QRConfig = [
     },
 ];
 const canvasSize = [450, 320];
-const qrBorder = 10;
 function makeid(length) {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -129,9 +128,10 @@ router.get("/qr/:qr", (req, res) => __awaiter(void 0, void 0, void 0, function* 
             !qr.prize.payed) {
             const response = {
                 value: qr.prize.value,
-                msg: qr.prize.value <= 50
-                    ? "Введите номер телефона для пополнения счета"
-                    : "Введите номер карты для перевода денег",
+                msg: "Введите номер телефона для пополнения счета",
+                // qr.prize.value <= 50
+                //   ? "Введите номер телефона для пополнения счета"
+                //   : "Введите номер карты для перевода денег",
                 approve: true,
                 code: qr.prize.code,
                 phone: true,
@@ -411,9 +411,7 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
     }
 }));
 /// gen chunk
-router.post("/generatecodes", 
-// auth,
-(req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const QRNumber = req.body.count;
         const price = req.body.price;
@@ -437,7 +435,13 @@ router.post("/generatecodes",
             .substr(2, 6)
             .toLowerCase()}.zip`;
         const filenameArray = [];
-        const output = fs_1.default.createWriteStream(path_1.default.normalize(__dirname + "/../public/archive/" + archName));
+        let output;
+        try {
+            output = fs_1.default.createWriteStream(path_1.default.normalize(__dirname + "/../public/archive/" + archName));
+        }
+        catch (error) {
+            console.error(error);
+        }
         const archive = archiver_1.default("zip", {
             zlib: { level: 6 },
         });
@@ -451,7 +455,7 @@ router.post("/generatecodes",
         const createPDF = (num, start, end) => __awaiter(void 0, void 0, void 0, function* () {
             let a = 1;
             const filename = start + "-" + end + ".pdf";
-            const file = __dirname + `/../public/pdf/${filename}`;
+            const file = path_1.default.normalize(__dirname + `/../public/pdf/${filename}`);
             console.log("pre");
             const doc = new jspdf_1.jsPDF({
                 orientation: "landscape",
@@ -560,7 +564,7 @@ router.post("/generatecodes",
             );
         }));
         yield archive.finalize();
-        const directory = __dirname + "/../public/pdf";
+        const directory = path_1.default.normalize(__dirname + "/../public/pdf");
         for (const fuck of filenameArray) {
             fs_1.default.unlink(path_1.default.join(directory, fuck), (err) => {
                 if (err)

@@ -17,4 +17,4 @@ RUN npm run build
 
 EXPOSE 1370 1370 465 465
 
-CMD [ "node", "./dist/index.js" ]
+CMD [ "npm", "run", "start" ]
