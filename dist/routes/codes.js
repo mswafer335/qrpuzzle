@@ -528,15 +528,16 @@ router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, vo
             console.log("next cycle");
         });
         const func = (count) => __awaiter(void 0, void 0, void 0, function* () {
+            const numerator = 250;
             let ind = 0;
             let firstNum = 1;
             let numLeft = count;
             while (ind < count) {
-                if (numLeft >= 1000) {
-                    ind += 1000;
-                    numLeft -= 1000;
-                    yield createPDF(1000, firstNum, ind);
-                    firstNum += 1000;
+                if (numLeft >= numerator) {
+                    ind += numerator;
+                    numLeft -= numerator;
+                    yield createPDF(numerator, firstNum, ind);
+                    firstNum += numerator;
                 }
                 else {
                     ind += 1;

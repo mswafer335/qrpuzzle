@@ -196,5 +196,9 @@ router.put("/comment/:id", auth_1.default, (req, res) => __awaiter(void 0, void 
         return res.status(500).json({ err: "server error" });
     }
 }));
+router.get("/test/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const bundles = yield Bundle_1.default.find();
+    res.json(bundles);
+}));
 exports.default = router;
 //# sourceMappingURL=management.js.map

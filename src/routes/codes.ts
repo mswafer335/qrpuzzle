@@ -427,11 +427,11 @@ auth,
     try {
       output = fs.createWriteStream(
         path.normalize(__dirname + "/../public/archive/" + archName)
-      );  
+      );
     } catch (error) {
       console.error(error);
     }
-    
+
     const archive = archiver("zip", {
       zlib: { level: 6 },
     });

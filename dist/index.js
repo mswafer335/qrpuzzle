@@ -67,6 +67,6 @@ const ExpireCheck = () => __awaiter(void 0, void 0, void 0, function* () {
     yield expiration_check_1.default();
     setTimeout(ExpireCheck, 1000 * 60 * 60 * 1);
 });
-StatChecker();
-ExpireCheck();
+// StatChecker();
+// ExpireCheck();
 //# sourceMappingURL=index.js.map

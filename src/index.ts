@@ -44,5 +44,5 @@ const ExpireCheck = async () => {
   setTimeout(ExpireCheck, 1000 * 60 * 60 * 1);
 };
 
-StatChecker();
-ExpireCheck();
+// StatChecker();
+// ExpireCheck();

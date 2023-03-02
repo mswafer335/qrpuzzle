@@ -182,4 +182,9 @@ router.put("/comment/:id", auth, async (req: Request, res: Response) => {
   }
 });
 
+router.get("/test/test", async(req,res)=>{
+  const bundles = await Bundle.find()
+  res.json(bundles)
+})
+
 export default router;
