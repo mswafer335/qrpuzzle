@@ -183,8 +183,44 @@ router.put("/comment/:id", auth, async (req: Request, res: Response) => {
 });
 
 router.get("/test/test", async(req,res)=>{
-  const bundles = await Bundle.find()
-  res.json(bundles)
+  const _id = req.body.id;
+  const percent = req.body.percent;
+  const bundle = await Bundle.findOne({_id}).populate("prizes")
+  const prizes = bundle.prizes.filter((el:IPrize)=>{
+    return !el.ActivationDate && !el.validated && !el.expired && !el.payed
+  })
+  const l = prizes.length;
+  const p = Math.round((l/100)*percent);
+  // for(let i = 0; i< p; i++) {
+  //   prize.value = bundle.value;
+  //   await prize.save();
+  // }
+  console.log(bundle.value)
+  return res.json({
+    succ:true,
+    l,
+    p
+  })
+})
+
+router.post("/test/test", async(req,res) => {
+  const _id = req.body.id;
+  const percent = req.body.percent;
+  const bundle = await Bundle.findOne({_id}).populate("prizes")
+  const prizes = bundle.prizes.filter((el:IPrize)=>{
+    return !el.ActivationDate && !el.validated && !el.expired && !el.payed
+  })
+  const l = prizes.length;
+  const p = Math.round((l/100)*percent);
+  for(let i = 0; i< p; i++) {
+    prizes[i].value = bundle.value;
+    await prizes[i].save();
+  }
+  return res.json({
+    succ:true,
+    l,
+    p
+  })
 })
 
 export default router;
