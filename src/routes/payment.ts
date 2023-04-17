@@ -69,8 +69,10 @@ router.put("/phone", async (req: Request, res: Response) => {
         console.log(response.data);
         if (response.data.status !== 0) {
           prize.payed = false;
+          console.log("err", response.data)
           res.status(400).json({ msg: "Что-то пошло не так", payed: false });
         } else {
+          console.log("data", response.data);
           prize.payed = true;
           res.json({ msg: "Деньги отправлены", payed: true });
           return Player.findOneAndUpdate(
