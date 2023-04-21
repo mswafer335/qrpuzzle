@@ -59,6 +59,10 @@ router.put("/phone", async (req: Request, res: Response) => {
     if (prize.player.prize_sum > 4000) {
       return res.status(400).json({ err: "Оплата выше 4к так не работает" });
     }
+    console.log(new Date());
+    console.log("phone", req.body.phone);
+    console.log("prize", prize.value);
+    console.log("player", prize.player)
     await axios({
       method: "get",
       url:

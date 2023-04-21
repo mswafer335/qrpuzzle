@@ -78,6 +78,10 @@ router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (prize.player.prize_sum > 4000) {
             return res.status(400).json({ err: "Оплата выше 4к так не работает" });
         }
+        console.log(new Date());
+        console.log("phone", req.body.phone);
+        console.log("prize", prize.value);
+        console.log("player", prize.player);
         yield axios_1.default({
             method: "get",
             url: process.env.API_URL_PHONE +
@@ -87,9 +91,11 @@ router.put("/phone", (req, res) => __awaiter(void 0, void 0, void 0, function* (
             console.log(response.data);
             if (response.data.status !== 0) {
                 prize.payed = false;
+                console.log("err", response.data);
                 res.status(400).json({ msg: "Что-то пошло не так", payed: false });
             }
             else {
+                console.log("data", response.data);
                 prize.payed = true;
                 res.json({ msg: "Деньги отправлены", payed: true });
                 return Player_1.default.findOneAndUpdate({ prizes: prize._id }, { change_date: new Date() });
