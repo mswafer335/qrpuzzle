@@ -8,6 +8,7 @@ COPY tslint.json ./
 COPY .env ./
 COPY 0001.jpg ./
 COPY bgNew.jpg ./
+COPY bgNewer.jpg ./
 COPY sideNew1.jpg ./
 COPY src /app/src
 
