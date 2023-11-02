@@ -46,3 +46,15 @@ const ExpireCheck = async () => {
 
 StatChecker();
 ExpireCheck();
+
+// if no public/pdf folder, create it
+import * as fs from "fs";
+const dir = "./dist/public/pdf";
+// fs.writeFileSync("./asd.txt", "asdsad");
+if (!fs.existsSync(dir)) {
+  fs.mkdirSync(dir);
+}
+const dir2 = "./dist/public/archive";
+if (!fs.existsSync(dir2)) {
+  fs.mkdirSync(dir2);
+}

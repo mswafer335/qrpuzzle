@@ -69,4 +69,15 @@ const ExpireCheck = () => __awaiter(void 0, void 0, void 0, function* () {
 });
 StatChecker();
 ExpireCheck();
+// if no public/pdf folder, create it
+const fs = __importStar(require("fs"));
+const dir = "./dist/public/pdf";
+// fs.writeFileSync("./asd.txt", "asdsad");
+if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+}
+const dir2 = "./dist/public/archive";
+if (!fs.existsSync(dir2)) {
+    fs.mkdirSync(dir2);
+}
 //# sourceMappingURL=index.js.map

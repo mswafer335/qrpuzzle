@@ -393,7 +393,7 @@ router.get("/find/all", auth, async (req: Request, res: Response) => {
 
 /// gen chunk
 router.post("/generatecodes",
-auth,
+// auth,
  async (req: Request, res: Response) => {
   try {
     const QRNumber: number = req.body.count;
@@ -408,7 +408,7 @@ auth,
       (response) => (instruction = response)
     );
     if(type===1) {
-      await imageToBase64(__dirname + "/../../bgNew.jpg").then(
+      await imageToBase64(__dirname + "/../../bgNewer.jpg").then(
         (response) => (bg = response)
       );
     }

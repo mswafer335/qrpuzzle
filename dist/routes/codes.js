@@ -411,7 +411,9 @@ router.get("/find/all", auth_1.default, (req, res) => __awaiter(void 0, void 0, 
     }
 }));
 /// gen chunk
-router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/generatecodes", 
+// auth,
+(req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const QRNumber = req.body.count;
         const price = req.body.price;
@@ -424,7 +426,7 @@ router.post("/generatecodes", auth_1.default, (req, res) => __awaiter(void 0, vo
         let bg;
         yield image_to_base64_1.default(__dirname + `/../../${instructionName}`).then((response) => (instruction = response));
         if (type === 1) {
-            yield image_to_base64_1.default(__dirname + "/../../bgNew.jpg").then((response) => (bg = response));
+            yield image_to_base64_1.default(__dirname + "/../../bgNewer.jpg").then((response) => (bg = response));
         }
         let date = new Date();
         date =
